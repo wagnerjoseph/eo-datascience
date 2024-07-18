@@ -31,12 +31,13 @@ jobs:
 
       - name: Restore Cache Jupyter Environments
         uses: actions/cache@v4
+        env:
+          CACHE_NUMBER: 0
         with:
           path: |
             ~/.local/share/jupyter/kernels
             /usr/share/miniconda/envs
-          key: ${{ runner.os }}-jupyter-${{ hashFiles('chapters/*.yml') }}
-          restore-keys: ${{ runner.os }}-jupyter-
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('chapters/*.yml') }}
 
       - name: Render and Publish
         id: setup-python
