@@ -29,15 +29,13 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Restore Cache Jupyter Environments
-        uses: actions/cache@v4
-        env:
-          CACHE_NUMBER: 0
+      - name: Restore Cache Conda Environments
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.local/share/jupyter/kernels
             /usr/share/miniconda/envs
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('chapters/*.yml') }}
+          key: ${{ runner.os }}-conda
 
       - name: Render and Publish
         id: setup-python
@@ -46,6 +44,14 @@ jobs:
           target: gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save Cache Conda Environments
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.local/share/jupyter/kernels
+            /usr/share/miniconda/envs
+          key: ${{ runner.os }}-conda-${{ hashFiles('chapters/*.yml') }}
 
       # - name: Cache Binder Build on mybinder.org
       #   uses: jupyterhub/repo2docker-action@master
@@ -57,7 +63,7 @@ jobs:
       - name: Commit Files
         if: github.ref == 'refs/heads/main'
         run: |
-          NB_PATH=($(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '[.]ipynb$'))
+          NB_PATH=notebooks/*.ipynb
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git commit ${NB_PATH[*]} -m "Quarto output" || echo "No changes to commit"
@@ -66,7 +72,15 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: ad-m/github-push-action@master
         with:
-          directory: eo-datascience-cookbook
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
           force: true
+
+      # - name: Push Commit
+      #   if: github.ref == 'refs/heads/main'
+      #   uses: ad-m/github-push-action@master
+      #   with:
+      #     directory: eo-datascience-cookbook
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     branch: main
+      #     force: true
