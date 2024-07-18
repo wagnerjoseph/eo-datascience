@@ -1,0 +1,5 @@
+#Files
+.env
+/.quarto/
+/_book/
+/data/

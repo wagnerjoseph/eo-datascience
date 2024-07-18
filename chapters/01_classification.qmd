@@ -1,0 +1,29 @@
+---
+title: Classification
+author: Pikall Nikolas
+jupyter: 
+  kernelspec:
+    name: "01_classification"
+    language: "python"
+    display_name: "01_classification"
+---
+
+```{python}
+#| echo: true
+#| code-fold: true
+# Imports
+import os
+import xarray as xr
+import numpy as np
+import datetime as dt
+import cmcrameri as cmc
+import folium
+from dotenv import dotenv_values
+
+from eodag import EODataAccessGateway, SearchResult, setup_logging
+from rasterio.crs import CRS
+
+# Setup logging
+setup_logging(0)
+```
+

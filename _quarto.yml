@@ -1,0 +1,22 @@
+project:
+  type: book
+  pre-render: 
+    - make kernel
+    - make data
+  post-render: make post-render
+
+book:
+  title: "notebooks4eo"
+  author: ""
+  date: "10/7/2024"
+  chapters:
+    - index.qmd
+    - chapters/01_classification.qmd
+    - chapters/02_floodmapping.qmd
+    - chapters/references.qmd
+
+bibliography: chapters/references.bib
+
+format:
+  html:
+    theme: cosmo
