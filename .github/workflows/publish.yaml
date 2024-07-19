@@ -77,6 +77,8 @@ jobs:
       - name: Commit Files Pythia Book
         if: github.ref == 'refs/heads/main'
         run: |
+          python src/render_sfinx_toc.py
+          cp ./_toc.yml ./pythia/
           cp ./notebooks/*.ipynb ./pythia/notebooks/
           cd ./pythia
           git config --local user.name "$GITHUB_ACTOR"
