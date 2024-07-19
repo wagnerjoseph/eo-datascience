@@ -24,7 +24,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tuw-geo/eo-datascience-cookbook
-          path: eo-datascience-cookbook
+          path: pythia
+          fetch-depth: 0
+          token: ${{ secrets.BOT_TOKEN }}
+          persist-credentials: true
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
@@ -34,8 +37,9 @@ jobs:
         with:
           path: |
             ~/.local/share/jupyter/kernels
+            ~/.cache/pip
             /usr/share/miniconda/envs
-          key: ${{ runner.os }}-conda
+          key: ${{ runner.os }}-conda-${{ hashFiles('chapters/*.yml') }}
 
       - name: Render and Publish
         id: setup-python
@@ -50,6 +54,7 @@ jobs:
         with:
           path: |
             ~/.local/share/jupyter/kernels
+            ~/.cache/pip
             /usr/share/miniconda/envs
           key: ${{ runner.os }}-conda-${{ hashFiles('chapters/*.yml') }}
 
@@ -60,27 +65,23 @@ jobs:
       #     MYBINDERORG_TAG: ${{ github.event.ref }} 
       #     REPO2DOCKER_EXTRA_ARGS: --subdir notebooks
 
-      - name: Commit Files
+      - name: Commit Files Quarto Book
         if: github.ref == 'refs/heads/main'
         run: |
-          NB_PATH=notebooks/*.ipynb
+          NB_PATH=./notebooks/*.ipynb
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git commit ${NB_PATH[*]} -m "Quarto output" || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
 
-      - name: Push Commit
+      - name: Commit Files Pythia Book
         if: github.ref == 'refs/heads/main'
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
-          force: true
+        run: |
+          cp ./notebooks/*.ipynb ./pythia/notebooks/
+          cd ./pythia
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git add .
+          git commit -m "Quarto output" || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
 
-      # - name: Push Commit
-      #   if: github.ref == 'refs/heads/main'
-      #   uses: ad-m/github-push-action@master
-      #   with:
-      #     directory: eo-datascience-cookbook
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     branch: main
-      #     force: true
