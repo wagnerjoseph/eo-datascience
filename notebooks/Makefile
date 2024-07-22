@@ -1,7 +1,7 @@
 .ONESHELL:
 SHELL = /bin/bash
 .PHONY: help clean environment kernel post-render data
-YML = $(wildcard chapters/*.yml)
+YML = $(wildcard notebooks/*.yml)
 QMD = $(wildcard chapters/*.qmd)
 REQ = $(basename $(notdir $(YML)))
 CONDA_ENV_DIR := $(foreach i,$(REQ),$(shell conda info --base)/envs/$(i))

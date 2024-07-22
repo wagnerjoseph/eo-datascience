@@ -3,21 +3,19 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - ipykernel=6.26.5
-  - pip=24.0
-  - python=3.10.12
-  - xarray=2024.6.0
-  - ca-certificates
-  - openssl
-  - stackstac=0.5.0
-  - odc-stac=0.3.10
-  - dask=2024.7.0
-  - rasterio=1.3.10
-  - cmcrameri=1.9
-  - numpy=2.0.0
-  - matplotlib=3.9.1
-  - certifi
-  - seaborn=0.13.2
-  - scikit-learn=1.5.1
+  - python=3.10
+  - pip
+  - mamba
+  - jupyter
+  - xarray
+  - stackstac
+  - odc-stac
+  - dask
+  - rasterio
+  - cmcrameri
+  - numpy
+  - matplotlib
+  - seaborn
+  - scikit-learn
   - pip:
-      - pystac-client=0.8.2
+      - pystac-client

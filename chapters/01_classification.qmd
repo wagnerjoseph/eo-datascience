@@ -6,6 +6,7 @@ jupyter:
     name: "01_classification"
     language: "python"
     display_name: "01_classification"
+eval: false
 ---
 
 ```{python}
