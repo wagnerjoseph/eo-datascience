@@ -15,10 +15,9 @@ book:
     - chapters/02_floodmapping.qmd
     - chapters/references.qmd
   navbar: 
-    logo: https://www.tuwien.at/index.php?eID=dumpFile&t=f&f=180458&token=fe76daebeea536ee4be1650979e817f6fc0a2ea2
+    logo: assets/images/tuw-geo-logo.svg
   sidebar:
-    logo: https://www.tuwien.at/index.php?eID=dumpFile&t=f&f=180458&token=fe76daebeea536ee4be1650979e817f6fc0a2ea2
-
+    logo: assets/images/tuw-geo-logo.svg
 bibliography: chapters/references.bib
 
 format:
