@@ -153,6 +153,25 @@ plot.axes.set_title(f"RGB - Median Composite\n{start_date.strftime('%d.%m.%Y')} 
 plt.show()
 ```
 
+### False Color Image
+In addition to the regular RGB Image, we can swap any of the bands from the visible spectrum with any other bands. In this specific case the red band has been changed to the near infrared band. This allows us to see vegetated areas more clearly, since they now appear in a bright red color. This is due to the fact that plants absorb regular red light while reflecting near infrared light [@nasa2020].
+
+```{python}
+# compute the false color image
+fc_median = (
+    ds_odc[['nir', 'green', 'blue']]
+    .where(ds_odc.valid)
+    .to_dataarray(dim="band")
+    .transpose(..., "band")
+    .median(dim="time")
+    .astype(int)
+)
+fc_comp = avg(fc_median)
+plot = fc_comp.plot.imshow(rgb="band", figsize=(8, 8))
+plot.axes.set_title(f"False Color - Median Composite\n{start_date.strftime('%d.%m.%Y')} - {end_date.strftime('%d.%m.%Y')}")
+plt.show()
+```
+
 ### NDVI Image
 To get an first impression of the data, we can calculate the NDVI (Normalized Difference Vegetation Index) and plot it. The NDVI is calculated by useing the following formula. [@rouse1974monitoring]
 
