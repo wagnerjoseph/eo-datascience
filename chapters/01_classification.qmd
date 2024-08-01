@@ -116,8 +116,7 @@ ds_odc = odc.stac.load(
 )
 
 # actually load it
-with ProgressBar():
-    ds_odc.load()
+ds_odc.load()
 ```
 
 ## Data Visualization
@@ -192,7 +191,7 @@ def normalized_difference(a, b):
     return (a - b*1.) / (a + b)
 
 ndvi = normalized_difference(ds_odc.nir, ds_odc.red)
-ndvi.median(dim="time").plot.imshow(cmap='cmc.cork').axes.set_title('NDVI')
+ndvi.median(dim="time").plot.imshow(cmap='cmc.cork', vmin=-1, vmax=1).axes.set_title('NDVI')
 plt.show()
 ```
 
@@ -435,5 +434,6 @@ for p in ax.patches:
     ax.annotate(f'{p.get_height():.1f}%', (p.get_x() + p.get_width() / 2., p.get_height()), 
                 ha='center', va='center', xytext=(0, 9), textcoords='offset points')
 ```
+
 ## Conclusion
 In this chapter, we utilized machine learning to classify satellite imagery into forested and non-forested areas, comparing Naive Bayes and Random Forest classifiers. The Random Forest classifier generally outperformed Naive Bayes, with fewer errors in classification, although it misclassified the Danube River as forested, while Naive Bayes incorrectly identified cropland as forest. The analysis, supported by the bar chart, revealed that about 18% of the scene was classified as forest, 66% as non-forest, and the remainder included ambiguous categories. This comparison highlights the strengths and limitations of each classifier, underscoring the need for careful selection and evaluation of classification methods.
