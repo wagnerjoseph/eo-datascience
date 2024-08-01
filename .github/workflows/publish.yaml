@@ -66,7 +66,7 @@ jobs:
       #     REPO2DOCKER_EXTRA_ARGS: --subdir notebooks
 
       - name: Commit Files Quarto Book
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' | github.ref == 'refs/heads/dev'
         run: |
           NB_PATH=./notebooks/*.ipynb
           git config --local user.name "$GITHUB_ACTOR"
@@ -75,7 +75,7 @@ jobs:
           git push origin || echo "No changes to commit"
 
       - name: Commit Files Pythia Book
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' | github.ref == 'refs/heads/dev'
         run: |
           python src/render_sfinx_toc.py
           cp ./_toc.yml ./pythia/
