@@ -16,13 +16,33 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout Quarto Book
+        if: github.ref == 'refs/heads/main' 
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Checkout Pythia Book
+        if: github.ref == 'refs/heads/main' 
         uses: actions/checkout@v4
         with:
+          repository: tuw-geo/eo-datascience-cookbook
+          path: pythia
+          fetch-depth: 0
+          token: ${{ secrets.BOT_TOKEN }}
+          persist-credentials: true
+
+      - name: Checkout Quarto Book Branch dev
+        if: github.ref == 'refs/heads/dev' 
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Checkout Pythia Book Branch dev
+        if: github.ref == 'refs/heads/dev' 
+        uses: actions/checkout@v4
+        with:
+          ref: dev
           repository: tuw-geo/eo-datascience-cookbook
           path: pythia
           fetch-depth: 0
@@ -68,7 +88,7 @@ jobs:
       - name: Commit Files Quarto Book
         if: github.ref == 'refs/heads/main' 
         run: |
-          NB_PATH=./notebooks/*.ipynb
+          NB_PATH=./notebooks/*
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git commit ${NB_PATH[*]} -m "Quarto output" || echo "No changes to commit"
@@ -91,7 +111,7 @@ jobs:
       - name: Commit Files Quarto Book Branch dev
         if: github.ref == 'refs/heads/dev'
         run: |
-          NB_PATH=./notebooks/*.ipynb
+          NB_PATH=./notebooks/*
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git commit ${NB_PATH[*]} -m "Quarto output" || echo "No changes to commit"
