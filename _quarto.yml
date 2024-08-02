@@ -6,7 +6,7 @@ project:
   post-render: make post-render
 
 book:
-  title: "notebooks4eo"
+  title: "Earth Observation Datascience"
   author: ""
   date: "7/10/2024"
   chapters:
