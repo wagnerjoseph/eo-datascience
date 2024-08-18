@@ -1,5 +1,5 @@
 ---
-title: Classification
+title: Classification of Sentinel-2 imagery
 subtitle: Finding forests with satelite imagery
 jupyter: 
   kernelspec:

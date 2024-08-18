@@ -1,0 +1,9 @@
+name: eo-datascience
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - mamba
+  - jupyter
+  - nbformat

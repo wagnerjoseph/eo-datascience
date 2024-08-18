@@ -10,6 +10,11 @@ jupyter:
 
 ![Image from [wikipedia](https://upload.wikimedia.org/wikipedia/commons/d/d4/Thomas_Bayes.gif)](https://upload.wikimedia.org/wikipedia/commons/d/d4/Thomas_Bayes.gif)
 
+::: {.callout-note}
+This notebooks contains interactive element. These interactive element can only be viewed on Binder by clicking on the Binder badge or 🚀 button.
+:::
+
+
 ```{python}
 %matplotlib widget
 
