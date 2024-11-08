@@ -11,6 +11,8 @@ book:
   date: "7/10/2024"
   chapters:
     - index.qmd
+    - chapters/Courses
+      - chapter/Microwave Remote Sensing
     - chapters/01_classification.qmd
     - chapters/02_floodmapping.qmd
     - chapters/references.qmd
