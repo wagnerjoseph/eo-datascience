@@ -56,7 +56,3 @@ post-render:
 	- mv chapters/*.ipynb notebooks/ >/dev/null 2>&1
 	- for f in chapters/*.quarto_ipynb ; do mv -- "$f" "${f%.quarto_ipynb}.ipynb"  >/dev/null 2>&1; done
 	cp Makefile notebooks/
-
-data:
-	wget -q -P ./data https://cloud.geo.tuwien.ac.at/s/AezWMFwmFQJsKyr/download/floodmap.zip
-	cd data && unzip -n floodmap.zip && rm floodmap.zip
