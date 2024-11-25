@@ -2,7 +2,7 @@ from pathlib import Path
 import yaml
 
 def render_toc():
-    p = Path("notebooks").glob('*.ipynb')
+    p = Path("chapters").glob('*.qmd')
     files = [x.with_suffix('') for x in p if x.is_file()]
     files.sort()
     titles = [x.stem.split("_")[-1].title() for x in files]
