@@ -6,7 +6,6 @@
 _book/
 data/
 _freeze/
-notebooks/*.ipynb
 *_files/
 .jupyter_cache/
 *~
