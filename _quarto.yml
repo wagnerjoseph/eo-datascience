@@ -11,10 +11,12 @@ book:
   date: "7/10/2024"
   chapters:
     - index.qmd
-    - chapters/Courses
-      - chapter/Microwave Remote Sensing
-    - chapters/01_classification.qmd
-    - chapters/02_floodmapping.qmd
+    - part: "Courses"
+      chapters:
+        - chapters/01_classification.qmd
+        - chapters/02_floodmapping.qmd
+    - part: "Tutorials"
+    - part: "Lessons"
     - chapters/references.qmd
   navbar: 
     logo: assets/images/tuw-geo-logo.svg
@@ -27,3 +29,7 @@ format:
     theme: cosmo
     title-block-banner: "#006699"
     title-block-banner-color: white
+
+execute:
+  freeze: auto
+  keep-ipynb: true

@@ -2,9 +2,11 @@
 .env
 
 # Temporary and binary files
-/.quarto/
-/_book/
-/data/
+.quarto/
+_book/
+data/
+_freeze/
+notebooks/*.ipynb
 *_files/
 .jupyter_cache/
 *~
@@ -20,6 +22,7 @@ __pycache__/*
 .cache/*
 .*.swp
 .ipynb_checkpoints/*
+/**/.ipynb_checkpoints/*
 .DS_Store
 
 # Project files
@@ -60,6 +63,7 @@ MANIFEST
 # Per-project virtualenvs
 .venv*/
 venv
+.conda_envs/
 
 # Make file markers
 .install*
