@@ -1,7 +1,9 @@
 on:
   workflow_dispatch:
   push:
-    branches: [main, dev]
+    tags: [ v* ]
+    # When a tag like v0.1.0 is created, the workflow will be triggered
+    # Should follow https://semver.org/ for versioning
 
 name: Quarto Publish
 
