@@ -10,7 +10,7 @@ jupyter:
 
 ![Image from [wikipedia](https://upload.wikimedia.org/wikipedia/commons/d/d4/Thomas_Bayes.gif)](https://upload.wikimedia.org/wikipedia/commons/d/d4/Thomas_Bayes.gif)
 
-:::{note}
+::: {.callout-note}
 This notebooks contains interactive element. The full interactive element can only be viewed on Binder by clicking on the Binder badge or 🚀 button.
 :::
 
@@ -69,7 +69,7 @@ search = eodc_catalog.search(
 items_sig0 = search.item_collection()
 
 
-def post_process_eodc_cube(dc: xr.Dataset, items, bands):
+def post_process_eodc_cube(dc, items, bands):
     """
     Postprocessing of EODC data cubes.
 
@@ -92,7 +92,7 @@ def post_process_eodc_cube(dc: xr.Dataset, items, bands):
     return dc
 
 
-def post_process_eodc_cube_(dc: xr.Dataset, items, band):
+def post_process_eodc_cube_(dc, items, band):
     scale = items[0].assets[band].extra_fields.get("raster:bands")[0]["scale"]
     nodata = items[0].assets[band].extra_fields.get("raster:bands")[0]["nodata"]
     return dc.where(dc != nodata) / scale
@@ -167,7 +167,7 @@ In the following lines we create a map with microwave backscattering values.
 
 ```{python}
 #| label: fig-area
-#| fig-cap: 'Area targeted for $\sigma^0$ backscattering is the Greek region of Thessaly, which experienced a major flood in February of 2018.'
+#| fig-cap: "Area targeted for $\\sigma^0$ backscattering is the Greek region of Thessaly, which experienced a major flood in February of 2018."
 mrs_view = flood_dc.sig0.hvplot.image(
     x="x", y="y", cmap="viridis", geo=True, tiles=True
 ).opts(frame_height=400)
@@ -195,7 +195,7 @@ and
 $$P(NF|\sigma^0)P(\sigma^0) = P(\sigma^0|NF)P(NF).$$
 
 
-The forward probability of $\sigma^0$ given the occurrence of flooding ($P(\sigma^0|F)$) and $\sigma^0$ given no flooding ($P(\sigma^0|NF)$) can be extracted from past information on backscattering over land and water surfaces. As seen in the sketch below , the characteristics of backscattering over land and water differ considerably.
+The forward probability of $\sigma^0$ given the occurrence of flooding ($P(\sigma^0|F)$) and $\sigma^0$ given no flooding ($P(\sigma^0|NF)$) can be extracted from past information on backscattering over land and water surfaces. As seen in the sketch below (@fig-sat), the characteristics of backscattering over land and water differ considerably.
 
 ![Schematic backscattering over land and water. Image from [Geological Survey Ireland](https://www.gsi.ie/images/images/SAR_mapping_land_water.jpg)](https://www.gsi.ie/images/images/SAR_mapping_land_water.jpg){#fig-sat}
 
@@ -273,8 +273,7 @@ Without going into the details of how these likelihoods are calculated, you can 
 
 ```{python}
 #| label: fig-lik
-#| fig-cap: Likelihoods for $\sigma^0$ being associated with land or water for 1 pixel in the Greek area of Thessaly. Likelihoods are calculated over a range of $\sigma^0$. The pixel's observed $\sigma^0$ is given with a vertical line. Hover on the map to re-calculate and update this figure for another pixel in the study area.
-
+#| fig-cap: "Likelihoods for $\\sigma^0$ being associated with land or water for 1 pixel in the Greek area of Thessaly. Likelihoods are calculated over a range of $\\sigma^0$. The pixel's observed $\\sigma^0$ is given with a vertical line. Hover on the map to re-calculate and update this figure for another pixel in the study area."
 def model_likelihoods(sigma=(-30, 0), x=None, y=None):
     """
     Model likelihoods over a range of sigma naught.
@@ -306,7 +305,7 @@ def model_likelihoods(sigma=(-30, 0), x=None, y=None):
     )
 
 
-pointer = hv.streams.PointerXY(source=mrs_view.get(1), x=100, y=100)
+pointer = hv.streams.PointerXY(source=mrs_view.get(1), x=22.1, y=39.5)
 
 likelihood_pdi = hvplot.bind(
     model_likelihoods, x=pointer.param.x, y=pointer.param.y
@@ -357,7 +356,7 @@ We can plot the posterior probabilities of flooding and non-flooding again and c
 
 ```{python}
 #| label: fig-post
-#| fig-cap: Posterior probabilities for $\sigma^0$ of 1 pixel being associated with land for water in the Greek area of Thessaly. Hover on the map to re-calculate and update this figure for another pixel in the study area..
+#| fig-cap: "Posterior probabilities for $\\sigma^0$ of 1 pixel being associated with land for water in the Greek area of Thessaly. Hover on the map to re-calculate and update this figure for another pixel in the study area."
 
 
 def model_posteriors(sigma=(-30, 0), x=None, y=None):
@@ -432,7 +431,7 @@ def bayesian_flood_decision(sigma, x=None, y=None):
 
 ```{python}
 #| label: fig-clas
-#| fig-cap: Flood extent of the Greek region of Thessaly based on Bayesian probabilities are shown on the map superimposed on an open street map. Hover over a pixel to generate the point's water and land likelihoods as well as the posterior probabilities.
+#| fig-cap: "Flood extent of the Greek region of Thessaly based on Bayesian probabilities are shown on the map superimposed on an open street map. Hover over a pixel to generate the point's water and land likelihoods as well as the posterior probabilities."
 
 flood_dc["decision"] = (
     ("y", "x"),

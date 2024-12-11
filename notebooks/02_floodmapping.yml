@@ -3,7 +3,6 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
-  - pip
   - mamba
   - jupyter
   - numpy
@@ -16,5 +15,5 @@ dependencies:
   - jupyter_bokeh
   - dask
   - pystac-client
-  - odc_stac
+  - odc-stac
   - rioxarray
