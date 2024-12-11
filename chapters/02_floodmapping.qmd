@@ -11,54 +11,167 @@ jupyter:
 ![Image from [wikipedia](https://upload.wikimedia.org/wikipedia/commons/d/d4/Thomas_Bayes.gif)](https://upload.wikimedia.org/wikipedia/commons/d/d4/Thomas_Bayes.gif)
 
 ::: {.callout-note}
-This notebooks contains interactive element. These interactive element can only be viewed on Binder by clicking on the Binder badge or 🚀 button.
+This notebooks contains interactive element. The full interactive element can only be viewed on Binder by clicking on the Binder badge or 🚀 button.
 :::
 
 
-```{python}
-%matplotlib widget
+This notebook explains how microwave ($\sigma^0$) backscattering can be used to map the extent of a flood. We replicate in this exercise the work of [@bauer-marschallinger_satellite-based_2022] on the TU Wien Bayesian-based flood mapping algorithm.
 
+
+```{python}
+import pystac_client
 import numpy as np
 import xarray as xr
 import numpy as np
 import datetime
-import matplotlib.pyplot as plt
+import rioxarray
+import pandas as pd
+
+import hvplot.pandas
+import hvplot.xarray
+import panel as pn
+import holoviews as hv
+from bokeh.models import FixedTicker
 
 from scipy.stats import norm
-from eomaps import Maps
+from odc import stac as odc_stac
+
+pn.extension()
+hv.extension("bokeh")
 ```
 
+## Greece Flooding 2018
+
+In this exercise we will replicate the case study of the above mentioned paper, the February 2018 flooding of the Greek region of Thessaly.
+
 ```{python}
-sig0_dc = xr.open_dataset('../data/s1_parameters/S1_CSAR_IWGRDH/SIG0/V1M1R1/EQUI7_EU020M/E054N006T3/SIG0_20180228T043908__VV_D080_E054N006T3_EU020M_V1M1R1_S1AIWGRDH_TUWIEN.nc')
+time_range = "2018-02-28T04:00:00Z/2018-02-28T05:00:00Z"
+minlon, maxlon = 21.93, 22.23
+minlat, maxlat = 39.47, 39.64
+bounding_box = [minlon, minlat, maxlon, maxlat]
+```
+
+## EODC STAC Catalog
+
+The data required for TU Wien flood mapping algorithm consists of terrain corrected sigma naught backscatter data $\sigma^{0}$, the projected local incidence angle (PLIA) values of those measurements, and the harmonic parameters (HPAR) of a model fit on the pixel's backscatter time series. The latter two datasets will needed to calculate the probability density functions over land and water for. We will be getting the required data from the EODC STAC Catalog. Specifically the collections: `SENTINEL_SIG0_20M`, `SENTINEL1_MPLIA` and `SENTINEL1_HPAR`. We use the `pystac-client` and `odc_stac` packages to, respectively, discover and fetch the data.
+
+Due to the way the data is acquired and stored, some items include "no data" areas. In our case, no data has the value -9999, but this can vary from data provider to data provider. This information can usually be found in the metadata. Furthermore, to save memory, data is often stored as integer (e.g. 25) and not in float (e.g. 2.5) format. For this reason, the backscatter values are often multiplied by a scale factor. Hence we define the function `post_process_eodc_cube` to correct for these factors as obtained from the STAC metadata.
+
+### Sigma naught
+
+```{python}
+eodc_catalog = pystac_client.Client.open("https://stac.eodc.eu/api/v1")
+search = eodc_catalog.search(
+    collections="SENTINEL1_SIG0_20M",
+    bbox=bounding_box,
+    datetime=time_range,
+)
+items_sig0 = search.item_collection()
+
+
+def post_process_eodc_cube(dc, items, bands):
+    """
+    Postprocessing of EODC data cubes.
+
+    Parameters
+    ----------
+    x : xarray.Dataset
+    items: pystac.item_collection.ItemCollection
+        STAC items that concern the Xarray Dataset
+    bands: array
+        Selected bands
+
+    Returns
+    -------
+    xarray.Dataset
+    """
+    if not isinstance(bands, tuple):
+        bands = tuple([bands])
+    for i in bands:
+        dc[i] = post_process_eodc_cube_(dc[i], items, i)
+    return dc
+
+
+def post_process_eodc_cube_(dc, items, band):
+    scale = items[0].assets[band].extra_fields.get("raster:bands")[0]["scale"]
+    nodata = items[0].assets[band].extra_fields.get("raster:bands")[0]["nodata"]
+    return dc.where(dc != nodata) / scale
+
+
+bands = "VV"
+sig0_dc = odc_stac.load(items_sig0, bands=bands, bbox=bounding_box)
+sig0_dc = (
+    post_process_eodc_cube(sig0_dc, items_sig0, bands)
+    .rename_vars({"VV": "sig0"})
+    .dropna(dim="time", how="all")
+    .median("time")
+)
+
+sig0_dc
+```
+
+### Harmonic Parameters
+
+```{python}
+search = eodc_catalog.search(
+    collections="SENTINEL1_HPAR",
+    bbox=bounding_box,
+    query=["sat:relative_orbit=80"],
+)
+
+items_hpar = search.item_collection()
+bands = ("C1", "C2", "C3", "M0", "S1", "S2", "S3", "STD")
+hpar_dc = odc_stac.load(
+    items_hpar,
+    bands=bands,
+    bbox=bounding_box,
+    groupby=None,
+)
+hpar_dc = post_process_eodc_cube(hpar_dc, items_hpar, bands).median("time")
+hpar_dc
+```
+
+### Projected Local Incidence Angles
+
+```{python}
+search = eodc_catalog.search(
+    collections="SENTINEL1_MPLIA",
+    bbox=bounding_box,
+    query=["sat:relative_orbit=80"],
+)
+
+items_plia = search.item_collection()
+
+bands = "MPLIA"
+plia_dc = odc_stac.load(
+    items_plia,
+    bands=bands,
+    bbox=bounding_box,
+)
+
+plia_dc = post_process_eodc_cube(plia_dc, items_plia, bands).median("time")
+plia_dc
+```
+
+Finally, we merged the datasets as one big dataset and reproject the data in EPSG 4326 for easier visualizing of the data.
+
+```{python}
+flood_dc = xr.merge([sig0_dc, plia_dc, hpar_dc])
+flood_dc = flood_dc.rio.reproject("EPSG:4326").rio.write_crs("EPSG:4326")
+flood_dc
 ```
 
 ## From Backscattering to Flood Mapping
 
-This notebook explains how microwave ($\sigma^0$) backscattering (@fig-area) can be used to map the extent of a flood. We replicate in this exercise the work of @bauer-marschallinger_satellite-based_2022 on the TU Wien Bayesian-based flood mapping algorithm.
-
-In the following lines we create a map with EOmaps [@quast_getting_2024] of the $\sigma^0$ backscattering values.
+In the following lines we create a map with microwave backscattering values.
 
 ```{python}
 #| label: fig-area
-#| fig-cap: 'Area targeted for $\sigma^0$ backscattering is the Greek region of Thessaly, which experienced a major flood in February of 2018.'
-m = Maps(ax=121, crs=3857)
-m.set_data(data=sig0_dc, x="x", y="y", parameter="SIG0", crs=Maps.CRS.Equi7_EU)
-m.plot_map()
-m.add_colorbar(label="$\sigma^0$ (dB)", orientation="vertical", hist_bins=30)
-m.add_scalebar(n=5)
-m2 = m.new_map(ax=122, crs=3857)
-m2.set_extent(m.get_extent())
-m2.add_wms.OpenStreetMap.add_layer.default()
-m.apply_layout(
-    {
-        'figsize': [7.32, 4.59],
-        '0_map': [0.05, 0.18, 0.35, 0.64],
-        '1_cb': [0.8125, 0.1, 0.1, 0.8],
-        '1_cb_histogram_size': 0.8,
-        '2_map': [0.4375, 0.18, 0.35, 0.64]
-        }
-    )
-m.show()
+#| fig-cap: "Area targeted for $\\sigma^0$ backscattering is the Greek region of Thessaly, which experienced a major flood in February of 2018."
+mrs_view = flood_dc.sig0.hvplot.image(
+    x="x", y="y", cmap="viridis", geo=True, tiles=True
+).opts(frame_height=400)
+mrs_view
 ```
 
 ## Microwave Backscattering over Land and Water
@@ -88,24 +201,31 @@ The forward probability of $\sigma^0$ given the occurrence of flooding ($P(\sigm
 
 ## Likelihoods
 
-The so-called likelihoods of $P(\sigma^0|F)$ and $P(\sigma^0|NF)$ can thus be calculated from past backscattering information. Without going into the details of how these likelihoods are calculated, you can **click** on a pixel of the map to plot the likelihoods of $\sigma^0$ being governed by land or water.
+The so-called likelihoods of $P(\sigma^0|F)$ and $P(\sigma^0|NF)$ can thus be calculated from past backscattering information. In the following code chunk we define the functions `calc_water_likelihood` and `calc_land_likelihood` to calculate the water and land likelihood's of a pixel, based on the Xarray datasets for the PLIA and HPAR, respectively.
 
 ```{python}
-#| label: fig-lik
-#| fig-cap: 'Likelihoods for $\sigma^0$ being associated with land or water for 1 pixel in the Greek area of Thessaly. Likelihoods are calculated over a range of $\sigma^0$. The pixel''s observed $\sigma^0$ is given with a vertical line. Click on the map to re-calculate and update this figure for another pixel in the study area. Map created with EOmaps [@quast_getting_2024].'
+def calc_water_likelihood(sigma, x=None, y=None):
+    """
+    Calculate water likelihoods.
 
-RANGE = np.arange(-30, 0, 0.1)
-hparam_dc = xr.open_dataset('../data/tuw_s1_harpar/S1_CSAR_IWGRDH/SIG0-HPAR/V0M2R3/EQUI7_EU020M/E054N006T3/D080.nc')
-plia_dc = xr.open_dataset('../data/s1_parameters/S1_CSAR_IWGRDH/PLIA-TAG/V01R03/EQUI7_EU020M/E054N006T3/PLIA-TAG-MEAN_20200101T000000_20201231T235959__D080_E054N006T3_EU020M_V01R03_S1IWGRDH.nc')
-sig0_dc['id'] = (('y', 'x'), np.arange(sig0_dc.SIG0.size).reshape(sig0_dc.SIG0.shape))
-hparam_dc['id'] = (('y', 'x'), np.arange(sig0_dc.SIG0.size).reshape(sig0_dc.SIG0.shape))
-plia_dc['id'] = (('y', 'x'), np.arange(sig0_dc.SIG0.size).reshape(sig0_dc.SIG0.shape))
+    Parameters
+    ----------
+    sigma: float|array
+        Sigma naught value(s)
+    x: float|array
+        Longitude
+    y: float|array
+        Latitude
 
-def calc_water_likelihood(id, x):
-    point = plia_dc.where(plia_dc.id == id, drop=True)
-    wbsc_mean = point.PLIA * -0.394181 + -4.142015
+    Returns
+    -------
+    numpy array
+    """
+    point = flood_dc.sel(x=x, y=y, method="nearest")
+    wbsc_mean = point.MPLIA * -0.394181 + -4.142015
     wbsc_std = 2.754041
-    return norm.pdf(x, wbsc_mean.to_numpy(), wbsc_std).flatten()
+    return norm.pdf(sigma, wbsc_mean.to_numpy(), wbsc_std)
+
 
 def expected_land_backscatter(data, dtime_str):
     w = np.pi * 2 / 365
@@ -121,108 +241,83 @@ def expected_land_backscatter(data, dtime_str):
     C2 = data.C2
     C3 = data.C3
     hm_c1 = (M0 + S1 * np.sin(wt)) + (C1 * np.cos(wt))
-    hm_c2 = ((hm_c1 + S2 * np.sin(2 * wt)) + C2 * np.cos(2 * wt))
-    hm_c3 = ((hm_c2 + S3 * np.sin(3 * wt)) + C3 * np.cos(3 * wt))
+    hm_c2 = (hm_c1 + S2 * np.sin(2 * wt)) + C2 * np.cos(2 * wt)
+    hm_c3 = (hm_c2 + S3 * np.sin(3 * wt)) + C3 * np.cos(3 * wt)
     return hm_c3
 
-def calc_land_likelihood(id, x):
-    point = hparam_dc.where(hparam_dc.id == id, drop=True)
-    lbsc_mean = expected_land_backscatter(point, '2018-02-01')
+
+def calc_land_likelihood(sigma, x=None, y=None):
+    """
+    Calculate land likelihoods.
+
+    Parameters
+    ----------
+    sigma: float|array
+        Sigma naught value(s)
+    x: float|array
+        Longitude
+    y: float|array
+        Latitude
+
+    Returns
+    -------
+    numpy array
+    """
+    point = flood_dc.sel(x=x, y=y, method="nearest")
+    lbsc_mean = expected_land_backscatter(point, "2018-02-01")
     lbsc_std = point.STD
-    return norm.pdf(x, lbsc_mean.to_numpy(), lbsc_std.to_numpy()).flatten()
+    return norm.pdf(sigma, lbsc_mean.to_numpy(), lbsc_std.to_numpy())
+```
 
-def calc_likelihoods(id, x):
-    if isinstance(x, list):
-        x = np.arange(x[0], x[1], 0.1)
-    water_likelihood, land_likelihood = calc_water_likelihood(id=id, x=x), calc_land_likelihood(id=id, x=x)
-    return water_likelihood, land_likelihood
+Without going into the details of how these likelihoods are calculated, you can **hover** over a pixel of the map to plot the likelihoods of $\sigma^0$ being governed by land or water. For reference we model the water and land likelihoods (`model_likelihoods`) over a range of $\sigma^0$ values.
 
-def view_bayes_flood(sig0_dc, calc_posteriors=None, bayesian_flood_decision=None):
+```{python}
+#| label: fig-lik
+#| fig-cap: "Likelihoods for $\\sigma^0$ being associated with land or water for 1 pixel in the Greek area of Thessaly. Likelihoods are calculated over a range of $\\sigma^0$. The pixel's observed $\\sigma^0$ is given with a vertical line. Hover on the map to re-calculate and update this figure for another pixel in the study area."
+def model_likelihoods(sigma=(-30, 0), x=None, y=None):
+    """
+    Model likelihoods over a range of sigma naught.
 
-    # initialize a map on top
-    m = Maps(ax=122, layer="data", crs=Maps.CRS.Equi7_EU)
+    Parameters
+    ----------
+    sigma: tuple
+        Minimum and maximum for range of sigma naught values
+    x: float|array
+        Longitude
+    y: float|array
+        Latitude
 
-    # initialize 2 matplotlib plot-axes next to the map
-    ax_upper = m.f.add_subplot(221)
-    ax_upper.set_ylabel("likelihood")
-    ax_upper.set_xlabel("$\sigma^0 (dB)$")
+    Returns
+    -------
+    Pandas Datafrane
+    """
+    sigma = np.arange(sigma[0], sigma[1], 0.1)
+    land_likelihood = calc_land_likelihood(sigma=sigma, x=x, y=y)
+    water_likelihood = calc_water_likelihood(sigma=sigma, x=x, y=y)
+    point = flood_dc.sel(x=x, y=y, method="nearest")
+    return pd.DataFrame(
+        {
+            "sigma": sigma,
+            "water_likelihood": water_likelihood,
+            "land_likelihood": land_likelihood,
+            "observed": np.repeat(point.sig0.values, len(land_likelihood)),
+        }
+    )
 
-    ax_lower = m.f.add_subplot(223)
-    ax_lower.set_ylabel("probability")
-    ax_lower.set_xlabel("$\sigma^0 (dB)$")
 
-    # -------- assign data to the map and plot it
-    if bayesian_flood_decision is not None:
-        # add map
-        m2 = m.new_layer(layer="map")
-        m2.add_wms.OpenStreetMap.add_layer.default()
-        flood_classification =  bayesian_flood_decision(sig0_dc.id, sig0_dc.SIG0)
-        sig0_dc["decision"] = (('y', 'x'), flood_classification.reshape(sig0_dc.SIG0.shape))
-        sig0_dc["decision"] = sig0_dc.decision.where(sig0_dc.SIG0.notnull())
-        sig0_dc["decision"] = sig0_dc.decision.where(sig0_dc.decision==0)
-        m.set_data(data=sig0_dc, x="x", y="y", parameter="decision", crs=Maps.CRS.Equi7_EU)
-        m.plot_map()
-        m.show_layer("map", ("data", 0.5))
-        m.apply_layout(
-            {
-                'figsize': [7.32, 4.59],
-                '0_map': [0.44573, 0.11961, 0.3375, 0.75237],
-                '1_': [0.10625, 0.5781, 0.3125, 0.29902],
-                '2_': [0.10625, 0.11961, 0.3125, 0.29902],
-            }
-        )
+pointer = hv.streams.PointerXY(source=mrs_view.get(1), x=22.1, y=39.5)
 
-    else:
-        m.set_data(data=sig0_dc, x="x", y="y", parameter="SIG0", crs=Maps.CRS.Equi7_EU)
-        m.plot_map()
-        m.add_colorbar(label="$\sigma^0$ (dB)", orientation="vertical", hist_bins=30)
-        m.apply_layout(
-            {
-                'figsize': [7.32, 4.59],
-                '0_map': [0.44573, 0.11961, 0.3375, 0.75237],
-                '1_': [0.10625, 0.5781, 0.3125, 0.29902],
-                '2_': [0.10625, 0.11961, 0.3125, 0.29902],
-                '3_cb': [0.8, 0.09034, 0.1, 0.85],
-                '3_cb_histogram_size': 0.8
-            }
-        )
+likelihood_pdi = hvplot.bind(
+    model_likelihoods, x=pointer.param.x, y=pointer.param.y
+).interactive()
 
-    def update_plots(ID, **kwargs):
-        
-        # get the data
-        value = sig0_dc.where(sig0_dc.id == ID, drop=True).SIG0.to_numpy()
-        y1_pdf, y2_pdf = calc_water_likelihood(ID, RANGE), calc_land_likelihood(ID, RANGE)
+view_likelihoods = (
+    likelihood_pdi.hvplot("sigma", "water_likelihood", ylabel="likelihoods").dmap()
+    * likelihood_pdi.hvplot("sigma", "land_likelihood").dmap()
+    * likelihood_pdi.hvplot("observed", "land_likelihood").dmap()
+).opts(frame_height=200, frame_width=300)
 
-        # plot the lines and vline
-        (water,) = ax_upper.plot(RANGE, y1_pdf, 'k-', lw=2, label="water")
-        (land,) = ax_upper.plot(RANGE, y2_pdf,'r-', lw=5, alpha=0.6, label="land")
-        value_left = ax_upper.vlines(x=value, ymin=0, ymax=np.max((y1_pdf, y2_pdf)), lw=3, label="observed")
-        ax_upper.legend(loc="upper left")
-
-        # add all artists as "temporary pick artists" so that they
-        # are removed when the next datapoint is selected
-        for a in [water, land, value_left]:
-            m.cb.pick.add_temporary_artist(a)
-
-        if calc_posteriors is not None:
-            f_post, nf_post = calc_posteriors(y1_pdf, y2_pdf)
-            (f,) = ax_lower.plot(RANGE, f_post, 'k-', lw=2, label="flood")
-            (nf,) = ax_lower.plot(RANGE, nf_post,'r-', lw=5, alpha=0.6, label="non-flood")
-            value_right = ax_lower.vlines(x=value, ymin=-0.1, ymax=1.1, lw=3, label="observed")
-            ax_lower.legend(loc="upper left")
-            for a in [f, nf, value_right]:
-                m.cb.pick.add_temporary_artist(a)
-
-        # re-compute axis limits based on the new artists
-        ax_upper.relim()
-        ax_upper.autoscale()
-
-    m.cb.pick.attach(update_plots)
-    m.cb.pick.attach.mark(permanent=False, buffer=1, fc="none", ec="r")
-    m.cb.pick.attach.mark(permanent=False, buffer=2, fc="none", ec="r", ls=":")
-    m.show()
-
-view_bayes_flood(sig0_dc)
+view_likelihoods + mrs_view.get(1)
 ```
 
 ## Posteriors
@@ -234,17 +329,72 @@ Let's say that our best estimate for the chance of flooding versus non-flooding 
 The following code block shows how we calculate the priors.
 
 ```{python}
-def calc_posteriors(water_likelihood, land_likelihood):
+def calc_posteriors(sigma, x=None, y=None):
+    """
+    Calculate posterior probability.
+
+    Parameters
+    ----------
+    sigma: float|array
+        Sigma naught value(s)
+    x: float|array
+        Longitude
+    y: float|array
+        Latitude
+
+    Returns
+    -------
+    Tuple of two Numpy arrays
+    """
+    land_likelihood = calc_land_likelihood(sigma=sigma, x=x, y=y)
+    water_likelihood = calc_water_likelihood(sigma=sigma, x=x, y=y)
     evidence = (water_likelihood * 0.5) + (land_likelihood * 0.5)
-    return (water_likelihood * 0.5) / evidence,  (land_likelihood * 0.5) / evidence
+    return (water_likelihood * 0.5) / evidence, (land_likelihood * 0.5) / evidence
 ```
 
-We can plot the posterior probabilities of flooding and non-flooding again and compare these to pixel's measured $\sigma^0$. **Click** on a pixel to calculate the posterior probability.
+We can plot the posterior probabilities of flooding and non-flooding again and compare these to pixel's measured $\sigma^0$. For reference we model the flood and non-flood posteriors (`model_posteriors`) over a range of $\sigma^0$ values. **Hover** on a pixel to calculate the posterior probability.
 
 ```{python}
 #| label: fig-post
-#| fig-cap: 'Posterior probabilities for $\sigma^0$ of 1 pixel being associated with land for water in the Greek area of Thessaly. Click on the map to re-calculate and update this figure for another pixel in the study area. Map created with EOmaps [@quast_getting_2024].'
-view_bayes_flood(sig0_dc, calc_posteriors)
+#| fig-cap: "Posterior probabilities for $\\sigma^0$ of 1 pixel being associated with land for water in the Greek area of Thessaly. Hover on the map to re-calculate and update this figure for another pixel in the study area."
+
+
+def model_posteriors(sigma=(-30, 0), x=None, y=None):
+    """
+    Model posterior probabilities over a range of sigma naught.
+
+    Parameters
+    ----------
+    sigma: tuple
+        Minimum and maximum for range of sigma naught values
+    x: float|array
+        Longitude
+    y: float|array
+        Latitude
+
+    Returns
+    -------
+    Pandas Datafrane
+    """
+    bays_pd = model_likelihoods(sigma=sigma, x=x, y=y)
+    sigma = np.arange(sigma[0], sigma[1], 0.1)
+    bays_pd["f_post_prob"], bays_pd["nf_post_prob"] = calc_posteriors(
+        sigma=sigma, x=x, y=y
+    )
+    return bays_pd
+
+
+posterior_pdi = hvplot.bind(
+    model_posteriors, x=pointer.param.x, y=pointer.param.y
+).interactive()
+
+view_posteriors = (
+    posterior_pdi.hvplot("sigma", "f_post_prob", ylabel="posteriors").dmap()
+    * posterior_pdi.hvplot("sigma", "nf_post_prob").dmap()
+    * posterior_pdi.hvplot("observed", "nf_post_prob").dmap()
+).opts(frame_height=200, frame_width=300)
+
+(view_likelihoods + view_posteriors).cols(1) + mrs_view.get(1)
 ```
 
 ## Flood Classification
@@ -252,15 +402,52 @@ view_bayes_flood(sig0_dc, calc_posteriors)
 We are now ready to combine all this information and classify the pixels according to the probability of flooding given the backscatter value of each pixel. Here we just look whether the probability of flooding is higher than non-flooding:
 
 ```{python}
-def bayesian_flood_decision(id, sig0_dc):
-    nf_post_prob, f_post_prob = calc_posteriors(*calc_likelihoods(id,  sig0_dc))
-    return np.greater(f_post_prob, nf_post_prob)
+def bayesian_flood_decision(sigma, x=None, y=None):
+    """
+    Bayesian decision.
+
+    Parameters
+    ----------
+    sigma: float|array
+        Sigma naught value(s)
+    x: float|array
+        Longitude
+    y: float|array
+        Latitude
+
+    Returns
+    -------
+    Xarray DataArray
+    """
+    f_post_prob, nf_post_prob = calc_posteriors(sigma=sigma, x=x, y=y)
+    return xr.where(
+        np.isnan(f_post_prob) | np.isnan(nf_post_prob),
+        np.nan,
+        np.greater(f_post_prob, nf_post_prob),
+    )
 ```
 
-**Click** on a point in the below map to see the likelihoods and posterior distributions (in the left-hand subplots).
+**Hover** on a point in the below map to see the likelihoods and posterior distributions (in the left-hand subplots).
 
 ```{python}
 #| label: fig-clas
-#| fig-cap: 'Flood extent of the Greek region of Thessaly based on Bayesian probabilities are shown on the map superimposed on an open street map. Click on a pixel to generate the point''s water and land likelihoods as well as the posterior probabilities. Map created with EOmaps [@quast_getting_2024].'
-view_bayes_flood(sig0_dc, calc_posteriors, bayesian_flood_decision)
+#| fig-cap: "Flood extent of the Greek region of Thessaly based on Bayesian probabilities are shown on the map superimposed on an open street map. Hover over a pixel to generate the point's water and land likelihoods as well as the posterior probabilities."
+
+flood_dc["decision"] = (
+    ("y", "x"),
+    bayesian_flood_decision(flood_dc.sig0, flood_dc.x, flood_dc.y),
+)
+
+colorbar_opts = {
+    "major_label_overrides": {
+        0: "non-flood",
+        1: "flood",
+    },
+    "ticker": FixedTicker(ticks=[0, 1]),
+}
+flood_view = flood_dc.decision.hvplot.image(
+    x="x", y="y", rasterize=True, geo=True, cmap=["rgba(0, 0, 1, 0.1)", "darkred"]
+).opts(frame_height=400, colorbar_opts={**colorbar_opts})
+mrs_view.get(0) * flood_view
 ```
+

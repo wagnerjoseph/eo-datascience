@@ -3,15 +3,17 @@ channels:
   - conda-forge
 dependencies:
   - python=3.12
-  - pip
   - mamba
   - jupyter
-  - eomaps
   - numpy
   - scipy
   - xarray
-  - zarr
-  - netcdf4
-  - ipympl 
-  - ipywidgets
   - datashader
+  - cartopy
+  - hvplot
+  - geoviews
+  - jupyter_bokeh
+  - dask
+  - pystac-client
+  - odc-stac
+  - rioxarray
