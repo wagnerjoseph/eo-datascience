@@ -5,7 +5,7 @@ on:
     # When a tag like v2024.11.27 is created, the workflow will be triggered
     # Should follow https://calver.org/ for versioning
 
-name: Quarto Publish
+name: Pythia Publish
 
 permissions:
     contents: write
@@ -18,33 +18,15 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout Quarto Book
-        if: github.ref == 'refs/heads/main' 
+        if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Checkout Pythia Book
-        if: github.ref == 'refs/heads/main' 
+        if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4
         with:
-          repository: tuw-geo/eo-datascience-cookbook
-          path: pythia
-          fetch-depth: 0
-          token: ${{ secrets.BOT_TOKEN }}
-          persist-credentials: true
-
-      - name: Checkout Quarto Book Branch dev
-        if: github.ref == 'refs/heads/dev' 
-        uses: actions/checkout@v4
-        with:
-          ref: dev
-          fetch-depth: 0
-
-      - name: Checkout Pythia Book Branch dev
-        if: github.ref == 'refs/heads/dev' 
-        uses: actions/checkout@v4
-        with:
-          ref: dev
           repository: tuw-geo/eo-datascience-cookbook
           path: pythia
           fetch-depth: 0
@@ -61,7 +43,7 @@ jobs:
             ~/.local/share/jupyter/kernels
             ~/.cache/pip
             /usr/share/miniconda/envs
-          key: ${{ runner.os }}-conda-${{ hashFiles('chapters/*.yml') }}
+          key: ${{ runner.os }}-conda-${{ hashFiles('notebooks/*.yml') }}
 
       - name: Render and Publish
         id: setup-python
@@ -78,7 +60,7 @@ jobs:
             ~/.local/share/jupyter/kernels
             ~/.cache/pip
             /usr/share/miniconda/envs
-          key: ${{ runner.os }}-conda-${{ hashFiles('chapters/*.yml') }}
+          key: ${{ runner.os }}-conda-${{ hashFiles('notebooks/*.yml') }}
 
       # - name: Cache Binder Build on mybinder.org
       #   uses: jupyterhub/repo2docker-action@master
@@ -87,17 +69,8 @@ jobs:
       #     MYBINDERORG_TAG: ${{ github.event.ref }} 
       #     REPO2DOCKER_EXTRA_ARGS: --subdir notebooks
 
-      - name: Commit Files Quarto Book
-        if: github.ref == 'refs/heads/main' 
-        run: |
-          NB_PATH=./notebooks/*
-          git config --local user.name "$GITHUB_ACTOR"
-          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git commit ${NB_PATH[*]} -m "Quarto output" || echo "No changes to commit"
-          git push || echo "No changes to commit"
-
       - name: Commit Files Pythia Book
-        if: github.ref == 'refs/heads/main' 
+        if: github.ref == 'refs/heads/main'
         run: |
           pip install .
           python src/eo_datascience/render_sfinx_toc.py
@@ -112,30 +85,3 @@ jobs:
           git add .
           git commit -m "Quarto output" || echo "No changes to commit"
           git push || echo "No changes to commit"
-
-      - name: Commit Files Quarto Book Branch dev
-        if: github.ref == 'refs/heads/dev'
-        run: |
-          NB_PATH=./notebooks/*
-          git config --local user.name "$GITHUB_ACTOR"
-          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git commit ${NB_PATH[*]} -m "Quarto output" || echo "No changes to commit"
-          git push || echo "No changes to commit"
-
-      - name: Commit Files Pythia Book Branch dev
-        if: github.ref == 'refs/heads/dev'
-        run: |
-          pip install .
-          python src/eo_datascience/render_sfinx_toc.py
-          python src/eo_datascience/clean_nb.py
-          cp ./_toc.yml ./pythia/
-          cp ./Makefile ./pythia/
-          cp ./chapters/references.bib ./pythia/notebooks/
-          cp -R ./notebooks/. ./pythia/notebooks/
-          cd ./pythia
-          git config --local user.name "$GITHUB_ACTOR"
-          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git add .
-          git commit -m "Quarto output" || echo "No changes to commit"
-          git push || echo "No changes to commit"
-
