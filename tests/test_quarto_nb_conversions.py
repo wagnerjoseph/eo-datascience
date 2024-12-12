@@ -1,6 +1,8 @@
 import nbformat
 from pathlib import Path
 import pytest
+import yaml
+from eo_datascience.render_sfinx_toc import render_toc, render_toc_, transform_quarto_toc, extract_section, rename_keys_section, rename_file_path
 from eo_datascience.clean_nb import (
     clean_up_frontmatter,
     convert_refs,
@@ -10,6 +12,67 @@ from eo_datascience.clean_nb import (
     quarto_note_replace,
     find_ipynb,
 )
+
+
+def test_toc_conversion():
+
+    mock_quarto_toc = """
+    project:
+      type: book
+      pre-render:
+          - make kernel
+      post-render: make post-render
+
+    book:
+      title: "Earth Observation Datascience"
+      author: ""
+      date: "7/10/2024"
+      chapters:
+          - index.qmd
+          - part: "Name of Part 1"
+            chapters:
+                - chapters/01_notebook.qmd
+                - chapters/02_notebook.qmd
+          - part: "Name of Part 2"
+            chapters:
+                - chapters/03_notebook.qmd
+                - chapters/04_notebook.qmd
+          - part: "Nothing here"
+          - chapters/references.qmd
+    """
+
+    mock_jb_toc = """
+    format: jb-book
+    root: README
+    parts:
+    - caption: Preamble
+      chapters:
+        - file: notebooks/how-to-cite
+    - caption: Name of Part 1
+      chapters:
+        - file: notebooks/01_notebook
+        - file: notebooks/02_notebook
+    - caption: Name of Part 2
+      chapters:
+        - file: notebooks/03_notebook
+        - file: notebooks/04_notebook
+    - caption: Nothing here
+    - caption: References
+      chapters:
+        - file: notebooks/references
+    """
+
+    ini = yaml.safe_load(mock_quarto_toc)
+    sec = extract_section(ini)
+    assert len(sec) == 3
+    assert rename_file_path("chapters/01_notebook.qmd") == "notebooks/01_notebook"
+    assert rename_keys_section(sec[0]) == {'caption': 'Name of Part 1', 'chapters': [{"file" : 'notebooks/01_notebook'}, {"file": 'notebooks/02_notebook'}]}
+    
+    quarto_toc_transform = transform_quarto_toc(ini)
+    assert len(sec) == len(quarto_toc_transform)
+
+    assert render_toc_(ini) == yaml.safe_load(mock_jb_toc)
+    render_toc(Path("_quarto.yml").absolute().as_posix())
 
 
 def test_remove_front_matter():
