@@ -41,3 +41,10 @@ notebooks can be easily converted to quarto files by using:
 ``` {bash}
 quarto convert basics-jupyter.ipynb # converts to qmd
 ```
+
+## Developing
+The pre-commit hooks can be used to check whether outputs are empty. This can be achieved, like so:
+```{bash}
+pip install pre-commit
+pre-commit install
+```
