@@ -1,5 +1,6 @@
 # Earth Observation Datascience
 
+
 This is a book on Earth Observation Datascience, consisting of common
 workflows in Python at the Department of Geodesy and Geoinformation at
 the TU Wien (Vienna Austria).
@@ -41,3 +42,18 @@ notebooks can be easily converted to quarto files by using:
 ``` {bash}
 quarto convert basics-jupyter.ipynb # converts to qmd
 ```
+
+## Developing
+
+The pre-commit hooks can be used to check whether outputs are empty.
+This can be achieved, like so:
+
+``` {bash}
+pip install pre-commit
+pre-commit install
+```
+
+The `git workflow` essentialy converts the quarto files in `chapters`
+into jupyter notebooks, generates a file for the table of contents and
+pushes these files together with the **Makefile** and the
+**references.bib** files to the cookbook repository.
