@@ -3,9 +3,9 @@ title: Reverend Bayes updates our Belief in Flood Detection
 subtitle: How an 275 year old idea helps map the extent of floods
 jupyter: 
   kernelspec:
-    name: "02_floodmapping"
+    name: "Floodmapping"
     language: "python"
-    display_name: "02_floodmapping"
+    display_name: "Floodmapping"
 ---
 
 ![Image from [wikipedia](https://upload.wikimedia.org/wikipedia/commons/d/d4/Thomas_Bayes.gif)](https://upload.wikimedia.org/wikipedia/commons/d/d4/Thomas_Bayes.gif)

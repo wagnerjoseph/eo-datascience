@@ -1,4 +1,4 @@
-name: 02_floodmapping
+name: Floodmapping
 channels:
   - conda-forge
 dependencies:

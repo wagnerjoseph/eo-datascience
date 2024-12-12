@@ -3,9 +3,9 @@ title: Classification of Sentinel-2 imagery
 subtitle: Finding forests with satelite imagery
 jupyter: 
   kernelspec:
-    name: "01_classification"
+    name: "Classification"
     language: "python"
-    display_name: "01_classification"
+    display_name: "Classification"
 format: 
     html:
         code-fold: show

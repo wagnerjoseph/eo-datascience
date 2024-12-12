@@ -1,4 +1,4 @@
-name: 01_classification
+name: Classification
 channels:
   - conda-forge
 dependencies:
