@@ -12,8 +12,8 @@ book:
     - index.qmd
     - part: "Courses"
       chapters:
-        - chapters/01_classification.qmd
-        - chapters/02_floodmapping.qmd
+        - chapters/Classification.qmd
+        - chapters/Floodmapping.qmd
     - part: "Tutorials"
     - part: "Lessons"
     - chapters/references.qmd

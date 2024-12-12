@@ -1,6 +1,6 @@
 .ONESHELL:
 SHELL = /bin/bash
-.PHONY: help clean environment kernel teardown post-render data
+.PHONY: help clean environment kernel teardown post-render
 
 YML = $(wildcard notebooks/*.yml)
 QMD = $(wildcard chapters/*.qmd)
@@ -53,6 +53,11 @@ kernel: $(KERNEL_DIR)
 	@echo -e "conda jupyter kernel is ready."
 
 post-render:
+	conda env create --file environment.yml -y
+	$(CONDA_ACTIVATE) eo-datascience
+	nbstripout **/*.ipynb
+	conda deactivate
 	- mv chapters/*.ipynb notebooks/ >/dev/null 2>&1
-	- for f in chapters/*.quarto_ipynb ; do mv -- "$f" "${f%.quarto_ipynb}.ipynb"  >/dev/null 2>&1; done
+	- $(foreach f, chapters/*.quarto_ipynb, \
+			mv -- "$f" "${f%.quarto_ipynb}.ipynb" >/dev/null 2>&1; )
 	cp Makefile notebooks/
