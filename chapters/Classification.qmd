@@ -1,6 +1,6 @@
 ---
 title: Classification of Sentinel-2 imagery
-subtitle: Finding forests with satelite imagery
+subtitle: Finding forests with satellite imagery
 jupyter:
   kernelspec:
     name: "Classification"
@@ -272,7 +272,7 @@ X_nonfeat_data = nonfeat_values[~np.isnan(nonfeat_values).any(axis=1)]
 y_feat_data = np.ones(X_feat_data.shape[0])
 y_nonfeat_data = np.zeros(X_nonfeat_data.shape[0])
 
-# Concatnate all Classes for training
+# Concatenate all Classes for training
 X = np.concatenate([X_feat_data, X_nonfeat_data])
 y = np.concatenate([y_feat_data, y_nonfeat_data])
 
