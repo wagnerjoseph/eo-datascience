@@ -1,7 +1,7 @@
 ---
 title: Classification of Sentinel-2 imagery
 subtitle: Finding forests with satelite imagery
-jupyter: 
+jupyter:
   kernelspec:
     name: "Classification"
     language: "python"
@@ -16,30 +16,24 @@ from datetime import datetime, timedelta
 
 import xarray as xr
 import pystac_client
-import stackstac
 import odc.stac
-import rioxarray
+import rioxarray  # noqa: F401
 import geopandas as gpd
 from odc.geo.geobox import GeoBox
-from dask.diagnostics import ProgressBar
-from rasterio.enums import Resampling
-from shapely.geometry import Polygon, mapping
+from shapely.geometry import Polygon
 
-import cmcrameri as cmc
+import cmcrameri as cmc  # noqa: F401
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+import matplotlib.colors as colors
 import pandas as pd
-from pathlib import Path
 
 # Scikit Learn
 from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-
-import matplotlib.colors as colors
 ```
 
 Before we start, we need to load the data. We will use ``odc-stac`` to obtain data from Earth Search by Element 84. Here we define the area of interest and the time frame, aswell as the EPSG code and the resolution.
@@ -55,33 +49,20 @@ epsg = 4326
 latmin, latmax = 47.86, 48.407
 lonmin, lonmax = 16.32, 16.9
 bounds = (lonmin, latmin, lonmax, latmax)
-minx, miny, maxx, maxy = bounds
-geom = {
-    'type': 'Polygon',
-    'coordinates': [[
-       [minx, miny],
-       [minx, maxy],
-       [maxx, maxy],
-       [maxx, miny],
-       [minx, miny]
-    ]]
-}
+
 
 # Set Temporal extent
-year = 2024
-month = 5
-day = 1
-delta = 10
+start_date = datetime(year=2024, month=5, day=1)
+end_date = start_date + timedelta(days=10)
 
-start_date = datetime(year, month, day)
-end_date = start_date + timedelta(days=delta)
-date_query = start_date.strftime("%Y-%m-%d") + "/" + end_date.strftime("%Y-%m-%d")
+time_format = "%Y-%m-%d"
+date_query = start_date.strftime(time_format) + "/" + end_date.strftime(time_format)
 
 # Search for Sentinel-2 data
 items = pystac_client.Client.open(
     "https://earth-search.aws.element84.com/v1"
 ).search(
-    intersects=geom,
+    bbox=bounds,
     collections=["sentinel-2-l2a"],
     datetime=date_query,
     limit=100,
@@ -90,7 +71,7 @@ print(len(items), 'scenes found')
 ```
 
 We will now focus on the area south-east of Vienna, where the Nationalpark _Donauauen_ is situated. The time frame we are interested in is the beginning of May 2024.
-After passing these parameters to the `stac-catalog` we have found **10 scenes** that we can use for our analysis. 
+After passing these parameters to the `stac-catalog` we have found **10 scenes** that we can use for our analysis.
 
 ### Loading the Data
 Now we will load the data directly into an ``xarray`` dataset, which we can use to perform computations on the data. ``xarray`` is a powerful library for working with multi-dimensional arrays, making it well-suited for handling satellite data.
@@ -98,21 +79,18 @@ Now we will load the data directly into an ``xarray`` dataset, which we can use 
 Here's how we can load the data using odc-stac and xarray:
 
 ```{python}
-#| output: false
 # define a geobox for my region
 geobox = GeoBox.from_bbox(bounds, crs=f"epsg:{epsg}", resolution=dx)
 
-# lazily combine items
-ds_odc = odc.stac.load(
+# lazily combine items into a datacube
+dc = odc.stac.load(
     items,
     bands=["scl", "red", "green", "blue", "nir"],
     chunks={'time': 5, 'x': 600, 'y': 600},
     geobox=geobox,
     resampling="bilinear",
 )
-
-# actually load it
-ds_odc.load()
+dc
 ```
 
 ## Data Visualization
@@ -125,26 +103,26 @@ First, we define a mask to exclude cloud cover and areas with missing data. Subs
 # define a mask for valid pixels (non-cloud)
 def is_valid_pixel(data):
     # include only vegetated, not_vegitated, water, and snow
-    return ((data > 3) & (data < 7)) | (data==11)
+    return ((data > 3) & (data < 7)) | (data == 11)
 
-ds_odc['valid'] = is_valid_pixel(ds_odc.scl)
-#ds_odc.valid.sum("time").plot()
 
-def avg(ds):
-    return (ds / ds.max() * 2)
+dc["valid"] = is_valid_pixel(dc.scl)
 
 # compute the masked median
 rgb_median = (
-    ds_odc[['red', 'green', 'blue']]
-    .where(ds_odc.valid)
+    dc[["red", "green", "blue"]]
+    .where(dc.valid)
     .to_dataarray(dim="band")
-    .transpose(..., "band")
     .median(dim="time")
     .astype(int)
 )
-rgb_comp = avg(rgb_median)
-plot = rgb_comp.plot.imshow(rgb="band", figsize=(8, 8))
-plot.axes.set_title(f"RGB - Median Composite\n{start_date.strftime('%d.%m.%Y')} - {end_date.strftime('%d.%m.%Y')}")
+
+# plot the median composite
+title_rgb = (
+    "RGB - Median Composite"
+    + f"\n{start_date.strftime('%d.%m.%Y')} - {end_date.strftime('%d.%m.%Y')}"
+)
+rgb_median.plot.imshow(robust=True).axes.set_title(title_rgb)
 plt.show()
 ```
 
@@ -152,18 +130,22 @@ plt.show()
 In addition to the regular RGB Image, we can swap any of the bands from the visible spectrum with any other bands. In this specific case the red band has been changed to the near infrared band. This allows us to see vegetated areas more clearly, since they now appear in a bright red color. This is due to the fact that plants absorb regular red light while reflecting near infrared light [@nasa2020].
 
 ```{python}
-# compute the false color image
+# compute a false color image
+# near infrared instead of red
 fc_median = (
-    ds_odc[['nir', 'green', 'blue']]
-    .where(ds_odc.valid)
+    dc[['nir', 'green', 'blue']]
+    .where(dc.valid)
     .to_dataarray(dim="band")
     .transpose(..., "band")
     .median(dim="time")
     .astype(int)
 )
-fc_comp = avg(fc_median)
-plot = fc_comp.plot.imshow(rgb="band", figsize=(8, 8))
-plot.axes.set_title(f"False Color - Median Composite\n{start_date.strftime('%d.%m.%Y')} - {end_date.strftime('%d.%m.%Y')}")
+
+title_fc = (
+    "False color - Median Composite"+
+    f"\n{start_date.strftime('%d.%m.%Y')} - {end_date.strftime('%d.%m.%Y')}"
+)
+fc_median.plot.imshow(robust=True).axes.set_title(title_fc)
 plt.show()
 ```
 
@@ -184,14 +166,17 @@ This gives us a good overview of the vegetation in the area. The values can rang
 ```{python}
 # Normalized Difference Vegetation Index (NDVI)
 def normalized_difference(a, b):
-    return (a - b*1.) / (a + b)
+    return (a - b * 1.0) / (a + b)
 
-ndvi = normalized_difference(ds_odc.nir, ds_odc.red)
-ndvi.median(dim="time").plot.imshow(cmap='cmc.cork', vmin=-1, vmax=1).axes.set_title('NDVI')
+
+ndvi = normalized_difference(dc.nir, dc.red)
+ndvi.median(dim="time").plot.imshow(
+    cmap="cmc.cork", vmin=-1, vmax=1
+).axes.set_title("NDVI")
 plt.show()
 ```
 
-## Classification 
+## Classification
 In this chapter, we will classify the satellite data to identify forested areas within the scene. By using supervised machine learning techniques, we can train classifiers to distinguish between forested and non-forested regions based on the training data we provide. We will explore two different classifiers and compare their performance in accurately identifying forest areas.
 
 ### Regions of Interest
@@ -216,19 +201,25 @@ nonforest_areas = {
     3: [Polygon([(16.519266, 48.101861), (16.470607, 48.100645), (16.500411, 48.07145), (16.519266, 48.101861)])],
     4: [Polygon([(16.453577, 48.051986), (16.412217, 48.067192), (16.425598, 48.012451), (16.453577, 48.051986)])],
 }
-
+```
+```{python}
 # Geoppandas Dataframe from Polygons
-forest_df = gpd.GeoDataFrame({'geometry': [poly[0] for poly in forest_areas.values()]}, crs="EPSG:4326")
-nonforest_df = gpd.GeoDataFrame({'geometry': [poly[0] for poly in nonforest_areas.values()]}, crs="EPSG:4326")
+forest_df = gpd.GeoDataFrame(
+    {"geometry": [poly[0] for poly in forest_areas.values()]}, crs="EPSG:4326"
+)
+nonforest_df = gpd.GeoDataFrame(
+    {"geometry": [poly[0] for poly in nonforest_areas.values()]},
+    crs="EPSG:4326",
+)
 
 
 # Plotting Regions of Interest
 fig, ax = plt.subplots()
-rgb_comp.plot.imshow(ax=ax)
-forest_df.plot(ax=ax, ec='C0', fc='none')
-nonforest_df.plot(ax=ax, ec='C1', fc='none')
-ax.set_title('Regions of Interest')
-ax.set_aspect('equal')
+rgb_median.plot.imshow(ax=ax, robust=True)
+forest_df.plot(ax=ax, ec="C0", fc="none")
+nonforest_df.plot(ax=ax, ec="C1", fc="none")
+ax.set_title("Regions of Interest")
+ax.set_aspect("equal")
 plt.show()
 ```
 
@@ -237,27 +228,36 @@ plt.show()
 In addition to the Regions of Interest we will extract the specific bands from the loaded dataset that we intend to use for the classification, which are the `red, green, blue` and `near-infrared` bands, although other bands can also be utilized. Using these bands, we will create both a training and a testing dataset. The training dataset will be used to train the classifier, while the testing dataset will be employed to evaluate its performance.
 ```{python}
 # Classifiying dataset (only necessary bands)
-bands = ['red', 'green', 'blue', 'nir']
-ds_class = (
-    ds_odc[bands]
-    .where(ds_odc.valid)
-    .median(dim="time")
-)
-ds_class = avg(ds_class)
+bands = ["red", "green", "blue", "nir"]
+ds_class = dc[bands].where(dc.valid).median(dim="time")
 ds_class = ds_class.fillna(0)
 
-def clip_array(ds:xr.Dataset, polygons):
+
+def clip_array(ds: xr.Dataset, polygons):
     clipped = ds.rio.clip(polygons, invert=False, all_touched=False, drop=True)
     clipped_nan = clipped.where(clipped == ds)
     return clipped_nan
 
-# Dictionaries with Dataarrays, each clipped by a Polygon
-data_dict_feat = {idx: clip_array(ds_class, polygon) for idx, polygon in forest_areas.items()}
-data_dict_nonfeat = {idx: clip_array(ds_class, polygon)  for idx, polygon in nonforest_areas.items()}
 
+# Dictionaries with Dataarrays, each clipped by a Polygon
+data_dict_feat = {
+    idx: clip_array(ds_class, polygon) for idx, polygon in forest_areas.items()
+}
+data_dict_nonfeat = {
+    idx: clip_array(ds_class, polygon)
+    for idx, polygon in nonforest_areas.items()
+}
+```
+```{python}
 # Reshape the polygon dataarrays to get a tuple (one value per band) of pixel values
-feat_data = [xarray.to_array().values.reshape(len(bands),-1).T for xarray in data_dict_feat.values()] # replaced median_data_dict_feat with data_dict_feat
-nonfeat_data = [xarray.to_array().values.reshape(len(bands),-1).T for xarray in data_dict_nonfeat.values()] # replaced median_data_dict_feat with data_dict_feat
+feat_data = [
+    xarray.to_array().values.reshape(len(bands), -1).T
+    for xarray in data_dict_feat.values()
+]  # replaced median_data_dict_feat with data_dict_feat
+nonfeat_data = [
+    xarray.to_array().values.reshape(len(bands), -1).T
+    for xarray in data_dict_nonfeat.values()
+]  # replaced median_data_dict_feat with data_dict_feat
 
 # The rows of the different polygons are concatenated to a single array for further processing
 feat_values = np.concatenate(feat_data)
@@ -266,27 +266,33 @@ nonfeat_values = np.concatenate(nonfeat_data)
 # Drop Nan Values
 X_feat_data = feat_values[~np.isnan(feat_values).any(axis=1)]
 X_nonfeat_data = nonfeat_values[~np.isnan(nonfeat_values).any(axis=1)]
-
+```
+```{python}
 # Creating Output Vector (1 for pixel is features; 0 for pixel is not feature)
 y_feat_data = np.ones(X_feat_data.shape[0])
 y_nonfeat_data = np.zeros(X_nonfeat_data.shape[0])
 
-# Concatnate all Classes for training 
+# Concatnate all Classes for training
 X = np.concatenate([X_feat_data, X_nonfeat_data])
 y = np.concatenate([y_feat_data, y_nonfeat_data])
 
 # Split into Training and Testing Data.
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
-
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.5, random_state=42
+)
 ```
 
 Now that we have prepared the training and testing data, we will create an image array of the actual scene that we intend to classify. This array will serve as the input for our classification algorithms, allowing us to apply the trained classifiers to the entire scene and identify the forested and non-forested areas accurately.
 
 ```{python}
-image_data = ds_class[bands].to_array(dim='band').transpose('latitude', 'longitude', 'band')
+image_data = (
+    ds_class[bands]
+    .to_array(dim="band")
+    .transpose("latitude", "longitude", "band")
+)
 
 # Reshape the image data
-num_of_pixels = ds_class.sizes['longitude'] * ds_class.sizes['latitude']
+num_of_pixels = ds_class.sizes["longitude"] * ds_class.sizes["latitude"]
 num_of_bands = len(bands)
 X_image_data = image_data.values.reshape(num_of_pixels, num_of_bands)
 ```
@@ -295,7 +301,7 @@ X_image_data = image_data.values.reshape(num_of_pixels, num_of_bands)
 Now that we have prepared all the needed data, we can begin the actual classification process.
 
 We will start with a _Naive Bayes_ classifier. First, we will train the classifier using our training dataset. Once trained, we will apply the classifier to the actual image to identify the forested and non-forested areas.
- 
+
 ```{python}
 # Naive Bayes initialization and training
 nb = GaussianNB()
@@ -304,33 +310,45 @@ nb_predict = nb.predict(X_test)
 
 # Prediction on image
 nb_predict_img = nb.predict(X_image_data)
-nb_predict_img = nb_predict_img.reshape(ds_class.sizes['latitude'], ds_class.sizes['longitude'])
+nb_predict_img = nb_predict_img.reshape(
+    ds_class.sizes["latitude"], ds_class.sizes["longitude"]
+)
 
 # Adding the Naive Bayes Prediction to the dataset
-ds_class['NB-forest'] = xr.DataArray(nb_predict_img, dims=['latitude', 'longitude'], coords={'longitude': ds_class['longitude'], 'latitude': ds_class['latitude']})
-
+ds_class["NB-forest"] = xr.DataArray(
+    nb_predict_img,
+    dims=["latitude", "longitude"],
+    coords={
+        "longitude": ds_class["longitude"],
+        "latitude": ds_class["latitude"],
+    },
+)
 ```
 
 To evaluate the effectiveness of the classification, we will plot the image predicted by the classifier. Additionally, we will examine the ``Classification Report`` and the ``Confusion Matrix`` to gain further insights into the classifier's performance.
 
 ```{python}
 # Plot Naive Bayes
-alpha = 1	
-cmap_green = colors.ListedColormap([(1, 1, 1, alpha), 'green'])
+alpha = 1
+cmap_green = colors.ListedColormap([(1, 1, 1, alpha), "green"])
 
-plot = ds_class['NB-forest'].plot.imshow(cmap=cmap_green, cbar_kwargs={'ticks': [0.25,0.75]})
+plot = ds_class["NB-forest"].plot.imshow(
+    cmap=cmap_green, cbar_kwargs={"ticks": [0.25, 0.75]}
+)
 cbar = plot.colorbar
-cbar.set_ticklabels(['non-forest', 'forest'])
-plot.axes.set_title('Naive Bayes Classification')
+cbar.set_ticklabels(["non-forest", "forest"])
+plot.axes.set_title("Naive Bayes Classification")
 plt.show()
 
 # Print the Classification report
-print("NAIVE BAYES: \n "+ classification_report(y_test, nb_predict))
+print("NAIVE BAYES: \n " + classification_report(y_test, nb_predict))
 
 # Print the confusion matrix
-con_mat_nb = pd.DataFrame(confusion_matrix(y_test, nb_predict), 
-                  index=['Actual Negative', 'Actual Positive'], 
-                  columns=['Predicted Negative', 'Predicted Positive'])
+con_mat_nb = pd.DataFrame(
+    confusion_matrix(y_test, nb_predict),
+    index=["Actual Negative", "Actual Positive"],
+    columns=["Predicted Negative", "Predicted Positive"],
+)
 display(con_mat_nb)
 ```
 
@@ -345,24 +363,37 @@ rf_predict = rf.predict(X_test)
 
 # Prediction on image
 rf_predict_img = rf.predict(X_image_data)
-rf_predict_img = rf_predict_img.reshape(ds_class.sizes['latitude'], ds_class.sizes['longitude'])
+rf_predict_img = rf_predict_img.reshape(
+    ds_class.sizes["latitude"], ds_class.sizes["longitude"]
+)
 
 # Adding the Random Forest Prediction to the dataset
-ds_class['RF-forest'] = xr.DataArray(rf_predict_img, dims=['latitude', 'longitude'], coords={'longitude': ds_class['longitude'], 'latitude': ds_class['latitude']})
+ds_class["RF-forest"] = xr.DataArray(
+    rf_predict_img,
+    dims=["latitude", "longitude"],
+    coords={
+        "longitude": ds_class["longitude"],
+        "latitude": ds_class["latitude"],
+    },
+)
 
-plot = ds_class['RF-forest'].plot.imshow(cmap=cmap_green, cbar_kwargs={'ticks': [0.25,0.75]})
+plot = ds_class["RF-forest"].plot.imshow(
+    cmap=cmap_green, cbar_kwargs={"ticks": [0.25, 0.75]}
+)
 cbar = plot.colorbar
-cbar.set_ticklabels(['non-forest', 'forest'])
-plot.axes.set_title('Random Forest Classification')
+cbar.set_ticklabels(["non-forest", "forest"])
+plot.axes.set_title("Random Forest Classification")
 plt.show()
 
 # Print the Classification report
-print("RANDOM FOREST: \n "+ classification_report(y_test, rf_predict))
+print("RANDOM FOREST: \n " + classification_report(y_test, rf_predict))
 
 # Print the confusion matrix
-con_mat_rf = pd.DataFrame(confusion_matrix(y_test, rf_predict), 
-                  index=['Actual Negative', 'Actual Positive'], 
-                  columns=['Predicted Negative', 'Predicted Positive'])
+con_mat_rf = pd.DataFrame(
+    confusion_matrix(y_test, rf_predict),
+    index=["Actual Negative", "Actual Positive"],
+    columns=["Predicted Negative", "Predicted Positive"],
+)
 display(con_mat_rf)
 ```
 
@@ -373,19 +404,21 @@ We can already see from the `classification reports` and the `confusion matrices
 To gain a more in-depth understanding of the classifiers' performance, we will compare their results. Specifically, we will identify the areas where both classifiers agree and the areas where they disagree. This comparison will provide valuable insights into the strengths and weaknesses of each classifier, allowing us to better assess their effectiveness in identifying forested and non-forested regions.
 
 ```{python}
-#| code-fold: true
-cmap_trio = colors.ListedColormap(['whitesmoke' ,'indianred', 'goldenrod', 'darkgreen'])
+# | code-fold: true
+cmap_trio = colors.ListedColormap(
+    ["whitesmoke", "indianred", "goldenrod", "darkgreen"]
+)
 
 
-double_clf = (ds_class['NB-forest'] + 2*ds_class['RF-forest'])
+double_clf = ds_class["NB-forest"] + 2 * ds_class["RF-forest"]
 
 fig, ax = plt.subplots()
-cax = ax.imshow(double_clf, cmap=cmap_trio, interpolation='none')
+cax = ax.imshow(double_clf, cmap=cmap_trio, interpolation="none")
 
 # Add a colorbar with custom tick labels
-cbar = fig.colorbar(cax, ticks=[1*0.375, 3*0.375, 5*0.375, 7*0.375])
-cbar.ax.set_yticklabels(['None', 'Naive Bayes', 'Random Forest', 'Both'])
-ax.set_title('Classification Comparisson')
+cbar = fig.colorbar(cax, ticks=[1 * 0.375, 3 * 0.375, 5 * 0.375, 7 * 0.375])
+cbar.ax.set_yticklabels(["None", "Naive Bayes", "Random Forest", "Both"])
+ax.set_title("Classification Comparisson")
 ax.set_axis_off()
 plt.show()
 ```
@@ -393,15 +426,20 @@ plt.show()
 The areas where both classifiers agree include the larger forested regions, such as the _Nationalpark Donau-Auen_ and the _Leithagebirge_. Additionally, both classifiers accurately identified the urban areas of Vienna and correctly excluded them from being classified as forested.
 
 ```{python}
-#| code-fold: true
+# | code-fold: true
 # Plot only one class, either None (0), Naive Bayes (1), Random Forest (2), or Both (3)
-fig, axs = plt.subplots(2,2, figsize=(8,8))
+fig, axs = plt.subplots(2, 2, figsize=(8, 8))
 ax = axs.ravel()
 
 for i in range(4):
-    ax[i].imshow(double_clf==i, cmap='cmc.oleron_r', interpolation='none')
-    category = ['by None', 'only by Naive Bayes', 'only by Random Forest', 'by Both'][i]
-    title = 'Areas classified ' + category
+    ax[i].imshow(double_clf == i, cmap="cmc.oleron_r", interpolation="none")
+    category = [
+        "by None",
+        "only by Naive Bayes",
+        "only by Random Forest",
+        "by Both",
+    ][i]
+    title = "Areas classified " + category
     ax[i].set_title(title)
     ax[i].set_axis_off()
 
@@ -415,20 +453,37 @@ Finally, by analyzing the proportion of forested areas within the scene, we find
 The accompanying bar chart illustrates the distribution of these classifications, highlighting the percentage of forested areas, non-forested areas, and regions classified by only one of the two classifiers. This visual representation helps to quantify the areas of agreement and disagreement between the classifiers, providing a clearer picture of their performance.
 
 ```{python}
-#| code-fold: true
+# | code-fold: true
 counts = {}
-for num in range(0,4):
-    num_2_class = {0: 'None', 1: 'Naive Bayes', 2: 'Random Forest', 3: 'Both'}
+for num in range(0, 4):
+    num_2_class = {0: "None", 1: "Naive Bayes", 2: "Random Forest", 3: "Both"}
     counts[num_2_class[num]] = int((double_clf == num).sum().values)
 
-class_counts_df = pd.DataFrame(list(counts.items()), columns=['Class', 'Count'])
-class_counts_df['Percentage'] = (class_counts_df['Count'] / class_counts_df['Count'].sum())*100
-ax = class_counts_df.plot.bar(x='Class', y='Percentage', rot=0, color='darkgreen', ylim=(0,100), title='Classified Areas per Classificator (%)')
+class_counts_df = pd.DataFrame(
+    list(counts.items()), columns=["Class", "Count"]
+)
+class_counts_df["Percentage"] = (
+    class_counts_df["Count"] / class_counts_df["Count"].sum()
+) * 100
+ax = class_counts_df.plot.bar(
+    x="Class",
+    y="Percentage",
+    rot=0,
+    color="darkgreen",
+    ylim=(0, 100),
+    title="Classified Areas per Classificator (%)",
+)
 
 # Annotate the bars with the percentage values
 for p in ax.patches:
-    ax.annotate(f'{p.get_height():.1f}%', (p.get_x() + p.get_width() / 2., p.get_height()), 
-                ha='center', va='center', xytext=(0, 9), textcoords='offset points')
+    ax.annotate(
+        f"{p.get_height():.1f}%",
+        (p.get_x() + p.get_width() / 2.0, p.get_height()),
+        ha="center",
+        va="center",
+        xytext=(0, 9),
+        textcoords="offset points",
+    )
 ```
 
 ## Conclusion
