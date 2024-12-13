@@ -6,10 +6,6 @@ jupyter:
     name: "Classification"
     language: "python"
     display_name: "Classification"
-format: 
-    html:
-        code-fold: show
-eval: true
 ---
 
 ## Data Acquisition

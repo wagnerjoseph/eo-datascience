@@ -2,9 +2,10 @@ import os
 import nbformat
 from pathlib import Path
 import re
+import argparse
 
 
-def clean_up_frontmatter(dir="./notebooks", save=True):
+def clean_up_frontmatter(dir="./notebooks", out=None, save=True):
     # Define the path to the notebooks
     nb_paths = find_ipynb(dir)
 
@@ -31,15 +32,19 @@ def clean_up_frontmatter(dir="./notebooks", save=True):
 
             new_text += fm[i + 1 :]
             nb.cells[0].source = "\n".join(new_text) + "\n"
+            nb.cells[0].cell_type = "markdown"
         # Save notebook
         if save:
-            nbformat.write(nb, nb_path)
+            if out is not None:
+                nbformat.write(nb, (Path(out).resolve() / nb_path.name).as_posix())
+            else:
+                nbformat.write(nb, nb_path)
         else:
             return nb
 
 
-def convert_bibliography(nb_path=Path("./notebooks/references.ipynb"), save=True):
-    
+def convert_bibliography(nb_path="./notebooks/references.ipynb", out=None, save=True):
+    nb_path = Path(nb_path)
     if nb_path.exists():
         nb = nbformat.read(nb_path, as_version=4)
         nb.cells[0].source = """# References
@@ -49,12 +54,15 @@ def convert_bibliography(nb_path=Path("./notebooks/references.ipynb"), save=True
     """
         # Save the notebook
         if save:
-            nbformat.write(nb, nb_path)
+            if out is not None:
+                nbformat.write(nb, Path(out).resolve() / nb_path.name)
+            else:
+                nbformat.write(nb, nb_path)
         else:
             return nb
 
 
-def convert_callout_notes(dir="./notebooks", save=True):
+def convert_callout_notes(dir="./notebooks", out=None, save=True):
     nb_paths = find_ipynb(dir)
 
     # Iterate over the notebooks
@@ -65,7 +73,10 @@ def convert_callout_notes(dir="./notebooks", save=True):
             if nb.cells[i]["cell_type"] == "markdown":
                 nb.cells[i].source = quarto_note_replace(nb.cells[i].source)
         if save:
-            nbformat.write(nb, nb_path)
+            if out is not None:
+                nbformat.write(nb, Path(out).resolve() / nb_path.name)
+            else:
+                nbformat.write(nb, nb_path)
         else:
             return nb
 
@@ -83,7 +94,7 @@ def quarto_note_replace(quarto):
     return quarto
 
 
-def convert_refs(dir="./notebooks", save=True):
+def convert_refs(dir="./notebooks", out=None, save=True):
     nb_paths = find_ipynb(dir)
 
     # Iterate over the notebooks
@@ -100,7 +111,10 @@ def convert_refs(dir="./notebooks", save=True):
 
         # Save the notebook
         if save:
-            nbformat.write(nb, nb_path)
+            if out is not None:
+                nbformat.write(nb, Path(out).resolve() / nb_path.name)
+            else:
+                nbformat.write(nb, nb_path)
         else:
             return nb
 
@@ -133,10 +147,15 @@ def find_ipynb(dir):
 
 
 def main():
-    clean_up_frontmatter()
-    convert_callout_notes()
-    convert_refs()
-    convert_bibliography()
+    parser = argparse.ArgumentParser(description="Convert Quarto to Jupyter Book")
+    parser.add_argument("dir", type=str, help="Input Directory")
+    parser.add_argument("out", type=str, help="Destination directory")
+    args = parser.parse_args()
+
+    clean_up_frontmatter(args.dir, args.out)
+    convert_callout_notes(args.out, args.out)
+    convert_refs(args.out, args.out)
+    convert_bibliography(out=args.out)
 
 
 if __name__ == "__main__":

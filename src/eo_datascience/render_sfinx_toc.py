@@ -1,12 +1,12 @@
 from pathlib import Path
 import yaml
+import argparse
 
-
-def render_toc(p):
+def render_toc(p, out="."):
     with open(p, "r") as ff:
         quarto_toc = yaml.safe_load(ff)
     toc = render_toc_(quarto_toc)
-    with open("_toc.yml", "w+") as ff:
+    with open((Path(out) / "_toc.yml").resolve().as_posix(), "w+") as ff:
         yaml.dump(toc, ff)
 
 
@@ -39,7 +39,10 @@ def rename_file_path(file_path):
 
 
 def main():
-    render_toc(p=Path("_quarto.yml").absolute().as_posix())
+    parser = argparse.ArgumentParser(description="Convert Quarto to Jupyter Book")
+    parser.add_argument("out", type=str, help="Destination directory")
+    args = parser.parse_args()
+    render_toc(p=Path("_quarto.yml").absolute().as_posix(), out=args.out)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,14 @@ import nbformat
 from pathlib import Path
 import pytest
 import yaml
-from eo_datascience.render_sfinx_toc import render_toc, render_toc_, transform_quarto_toc, extract_section, rename_keys_section, rename_file_path
+from eo_datascience.render_sfinx_toc import (
+    render_toc,
+    render_toc_,
+    transform_quarto_toc,
+    extract_section,
+    rename_keys_section,
+    rename_file_path,
+)
 from eo_datascience.clean_nb import (
     clean_up_frontmatter,
     convert_refs,
@@ -76,8 +83,9 @@ def test_toc_conversion():
 
 
 def test_remove_front_matter():
+    assert clean_up_frontmatter("./tests", None, False)["cells"][0]["cell_type"] == "markdown"
     assert (
-        clean_up_frontmatter("./tests", False)["cells"][0]["source"]
+        clean_up_frontmatter("./tests", None, False)["cells"][0]["source"]
         == "# This a mock Jupyter file\n**We use it for testing**\n\nSome other text, which should not be deleted!\n"
     )
 
@@ -98,7 +106,7 @@ def test_conversion_of_refs():
         r"lorem ipsum {cite:t}`anon2024` and {cite:t}`anon2025`",
     ]
     assert (
-        convert_refs("./tests", False)["cells"][2]["source"]
+        convert_refs("./tests", None, False)["cells"][2]["source"]
         == r"lorem ipsum {cite:p}`anon2024` and {cite:p}`anon2025` and lorem ipsum {cite:t}`anon2024` and {cite:t}`anon2025`"
     )
 
@@ -106,4 +114,4 @@ def test_conversion_of_refs():
 def test_conversion_of_callout_notes():
     rst = ":::{note}\nThis a callout note.\n:::"
     assert quarto_note_replace(r"::: {.callout-note}\nThis a callout note.\n:::") == rst
-    assert convert_callout_notes("./tests", False)["cells"][1]["source"] == rst
+    assert convert_callout_notes("./tests", None, False)["cells"][1]["source"] == rst
