@@ -1,6 +1,6 @@
 project:
   type: book
-  pre-render: 
+  pre-render:
     - make kernel
   post-render: make post-render
 
@@ -17,10 +17,10 @@ book:
     - part: "Tutorials"
     - part: "Lessons"
     - chapters/references.qmd
-  navbar: 
-    logo: assets/images/tuw-geo-logo.svg
+  navbar:
+    logo: assets/images/tuw-geo_eodc_logo_horizontal.png
   sidebar:
-    logo: assets/images/tuw-geo-logo.svg
+    logo: assets/images/tuw-geo_eodc_logo_vertical.png
 bibliography: chapters/references.bib
 
 format:
