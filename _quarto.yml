@@ -12,10 +12,13 @@ book:
     - index.qmd
     - part: "Courses"
       chapters:
-        - chapters/Classification.qmd
-        - chapters/Floodmapping.qmd
+        - chapters/Placeholder.qmd
     - part: "Tutorials"
+      chapters:
+        - chapters/Classification.qmd
     - part: "Lessons"
+      chapters:
+        - chapters/Floodmapping.qmd
     - chapters/references.qmd
   navbar: 
     logo: assets/images/tuw-geo-logo.svg

@@ -55,12 +55,3 @@ jobs:
       #     NO_PUSH: true
       #     MYBINDERORG_TAG: ${{ github.event.ref }} 
       #     REPO2DOCKER_EXTRA_ARGS: --subdir notebooks
-
-      - name: Commit Files Quarto Book
-        if: github.ref == 'refs/heads/main' 
-        run: |
-          NB_PATH=./notebooks/*
-          git config --local user.name "$GITHUB_ACTOR"
-          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git commit ${NB_PATH[*]} -m "Quarto output" || echo "No changes to commit"
-          git push || echo "No changes to commit"

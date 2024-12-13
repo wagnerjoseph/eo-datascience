@@ -67,5 +67,5 @@ venv
 # Make file markers
 .install*
 _toc.yml
-
+/_preview/
 /.quarto/

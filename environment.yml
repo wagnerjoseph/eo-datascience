@@ -9,3 +9,5 @@ dependencies:
   - nbformat
   - nbstripout
   - pytest
+  - jupyter-book
+  - sphinx-pythia-theme
