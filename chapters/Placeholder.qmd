@@ -1,9 +1,0 @@
----
-title: Placeholder
-subtitle: Placeholder
-jupyter: 
-  kernelspec:
-    name: "Floodmapping"
-    language: "python"
-    display_name: "Floodmapping"
----

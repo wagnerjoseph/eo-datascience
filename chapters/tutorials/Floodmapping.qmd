@@ -1,7 +1,7 @@
 ---
 title: Reverend Bayes updates our Belief in Flood Detection
 subtitle: How an 275 year old idea helps map the extent of floods
-jupyter: 
+jupyter:
   kernelspec:
     name: "Floodmapping"
     language: "python"
@@ -176,7 +176,7 @@ mrs_view
 
 ## Microwave Backscattering over Land and Water
 
-Reverend Bayes was concerned with two events, one (the *hypothesis*) occurring before the other (the *evidence*). If we know its cause, it is easy to logically deduce the probability of an effect. However, in this case we want to deduce the probability of a cause from an observed effect, also known as "reversed probability". In the case of flood mapping, we have $\sigma^0$ backscatter observations over land (the effect) and we want to deduce the probability of flooding ($F$) and non-flooding ($NF$). 
+Reverend Bayes was concerned with two events, one (the *hypothesis*) occurring before the other (the *evidence*). If we know its cause, it is easy to logically deduce the probability of an effect. However, in this case we want to deduce the probability of a cause from an observed effect, also known as "reversed probability". In the case of flood mapping, we have $\sigma^0$ backscatter observations over land (the effect) and we want to deduce the probability of flooding ($F$) and non-flooding ($NF$).
 
 In other words, we want to know the probability of flooding $P(F)$ given a pixel's $\sigma^0$:
 

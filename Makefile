@@ -2,8 +2,9 @@
 SHELL = /bin/bash
 .PHONY: help clean environment kernel teardown post-render dev
 
-YML = $(wildcard notebooks/*.yml)
-QMD = $(wildcard chapters/*.qmd)
+YML = $(wildcard notebooks/**/*.yml)
+QNB = $(shell find chapters -name *.quarto_ipynb)
+NB = $(shell find chapters -name *.ipynb -not -path "*/.jupyter_cache/*")
 REQ = $(basename $(notdir $(YML)))
 BASENAME = $(CURDIR)
 
@@ -11,6 +12,9 @@ CONDA_ACTIVATE = source $$(conda info --base)/etc/profile.d/conda.sh ; conda act
 CONDA_ENV_DIR := $(foreach i,$(REQ),$(shell conda info --base)/envs/$(i))
 CONDA_ENV_DEV_DIR := $(shell conda info --base)/envs/eo-datascience
 KERNEL_DIR := $(foreach i,$(REQ),$(shell jupyter --data-dir)/kernels/$(i))
+
+nb:
+	@echo $(NB)
 
 help:
 	@echo "Makefile for setting up environment, kernel, and pulling notebooks"
@@ -25,7 +29,7 @@ help:
 
 clean:
 	rm --force --recursive .ipynb_checkpoints/ **/.ipynb_checkpoints/ _book/ \
-		_freeze/ .quarto/ _preview/
+		_freeze/ .quarto/ _preview/ ./pytest_cache ./**/**/**/.jupyter_cache ./**/**/.jupyter_cache
 
 teardown:
 	$(foreach f, $(REQ), \
@@ -35,14 +39,14 @@ teardown:
 		conda remove -n $(f) --all -y ; \
 		conda deactivate; )
 
-$(CONDA_ENV_DIR): $(YML)
+$(CONDA_ENV_DIR):
 	- conda update -n base -c conda-forge conda -y
-	$(foreach f, $^, conda env create --file $(f); )
+	$(foreach f, $(YML), conda env create --file $(f); )
 
 environment: $(CONDA_ENV_DIR)
 	@echo -e "conda environments are ready."
 
-$(KERNEL_DIR): $(CONDA_ENV_DIR)
+$(KERNEL_DIR): environment
 	- python -m pip install --upgrade pip
 	python -m pip install jupyter
 	$(foreach f, $(REQ), \
@@ -61,11 +65,11 @@ dev: $(CONDA_ENV_DEV_DIR)
 
 post-render: dev
 	$(CONDA_ACTIVATE) eo-datascience
-	nbstripout **/*.ipynb
-	- mv chapters/*.ipynb notebooks/ >/dev/null 2>&1
-	- $(foreach f, chapters/*.quarto_ipynb, \
-			mv -- "$f" "${f%.quarto_ipynb}.ipynb" >/dev/null 2>&1; )
-	cp Makefile notebooks/
+	- $(foreach f, $(QNB), \
+			mv -- "$f" "$(subst .quarto_ipynb,.ipynb,$f)" ; )
+	$(foreach f, $(NB), \
+			nbstripout $f && mv $f "$(subst chapters,notebooks,$(dir $f))"; )
+
 
 preview: $(KERNEL_DIR) dev
 	$(CONDA_ACTIVATE) eo-datascience

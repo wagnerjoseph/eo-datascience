@@ -1,0 +1,269 @@
+---
+title: Discover and Read Sentinel 1 Data
+jupyter:
+  kernelspec:
+    name: "Microwave-remote-sensing"
+    language: "python"
+    display_name: "Microwave-remote-sensing"
+---
+
+
+This notebook demonstrates how to access radar data in a SpatioTemporal Asset Catalog (STAC) Catalogue using the pystac library. In this example, we use Sentinel-1 data from the EODC (earth observation data and high performance computing service provider based in Vienna) STAC catalog. In the further process, we will learn how to query a STAC catalog, select specific items, and display the metadata and the actual image.
+
+
+```{python}
+import pystac_client
+import folium
+from odc import stac as odc_stac
+```
+
+## Data Discovery
+
+```{python}
+eodc_catalog = pystac_client.Client.open("https://stac.eodc.eu/api/v1")
+
+eodc_catalog
+```
+
+The URL https://stac.eodc.eu/api/v1, served over Hypertext Transfer Protocol (HTTP), is a STAC-compliant API endpoint (specific URL address where an API service is available) that leads to the EODC Catalogue. Besides EODC's, other catalogues can be found on [STAC Index](https://stacindex.org/catalogs), such as United States Geological Survey (USGS) Landsat imagery, Sentinel Hub, Copernicus Data Space Ecosystem, and so on. Briefly spoken, STAC can be used to search, discover, and access metadata of these datasets with the same code. The EODC Catalogue can be accessed on the web via this [link](https://services.eodc.eu/browser/#/?.language=en) as well.
+
+Each STAC catalog, composed by different providers, has many collections. To get all collections of a catalog, we can print all of them and their ids, which are used to fetch them from the catalog.
+
+```{python}
+collections = eodc_catalog.get_collections()
+
+# length of string of collection.id, for pretty print
+max_length = max(len(collection.id) for collection in collections)
+
+for collection in eodc_catalog.get_collections():
+    print(f"{collection.id.ljust(max_length)}: {collection.title}")
+```
+
+To get a specific collection from the catalog, we can use the `client.get_collection()` method and provide the collection name. We can then display its description, id, temporal and spatial extent, license, etc. In this notebook, we will work with the Sentinel-1 sigma naught 20m collection.
+
+```{python}
+colllection_id = "SENTINEL1_SIG0_20M"
+
+collection = eodc_catalog.get_collection(colllection_id)
+collection
+```
+
+Each collection has multiple items. An item is one spatio-temporal instance the collection, for instance a satellite image. If items are needed for a specific timeframe or for a specific region of interest, we can define this as a query.
+
+```{python}
+time_range = "2022-10-01/2022-10-07"  # a closed range
+# time_range = "2022-01"  # whole month, same can be done for a year and a day
+# time_range = "2022-01-01/.."  # up to the current date, an open range
+# time_range = "2022-01-01T05:34:46"  # a specific time instance
+```
+
+A spatial region of interest can be defined in different ways. One option is to define a simple bounding box:
+
+```{python}
+latmin, latmax = 46.3, 49.3  # South to North
+lonmin, lonmax = 13.8, 17.8  # West to East
+
+bounding_box = [lonmin, latmin, lonmax, latmax]
+```
+
+If the region of interest is not rectengular, we can also define a polygon:
+
+```{python}
+# GEOJSON can be created on geojson.io
+
+# This specific area of interest is a rectangle, but since it is
+# a closed polygon it seems like it has five nodes
+
+area_of_interest = {
+    "coordinates": [
+        [
+            [17.710928010825853, 49.257630084442496],
+            [13.881798300915221, 49.257630084442496],
+            [13.881798300915221, 46.34747715326259],
+            [17.710928010825853, 46.34747715326259],
+            [17.710928010825853, 49.257630084442496],
+        ]
+    ],
+    "type": "Polygon",
+}
+```
+
+Using our previously loaded STAC catalog, we can now search for items fullfilling our query. In this example we are using the bounding box. If we want to use an area of interest specified in the geojson format - one hast to use the intersects parameter as documented in the comment below.
+
+```{python}
+search = eodc_catalog.search(
+    collections=colllection_id,  # can also be a list of several collections
+    bbox=bounding_box,  # search by bounding box
+    # intersects=area_of_interest,  # GeoJSON search
+    datetime=time_range,
+    # max_items=1  # number of max items to load
+)
+
+# If we comment everything besides colllection_id, we will load whole
+# collection for available region and time_range
+
+items_eodc = search.item_collection()
+print(f"On EODC we found {len(items_eodc)} items for the given search query")
+```
+
+Now, we can fetch a single item, in this case a Sentinel-1 image, from the query results. A good practice is to always check what metadata the data provider has stored on the item level. This can be done by looking into the item properties.
+
+```{python}
+item = items_eodc[0]
+item.properties
+```
+
+For now, let's display only the vertical-vertical (VV) polarized band of the item and some information about the data.
+
+```{python}
+item.assets["VV"].extra_fields.get("raster:bands")[0]
+```
+
+In the EODC STAC catalogue an item can conveniently be displayed using its thumbnail.
+
+```{python}
+item.assets["thumbnail"].href
+```
+
+Now we will plot the data on a map using the thumbnail and the python package [folium](https://python-visualization.github.io/folium/latest/user_guide.html). This is an easy way to quickly check how the data found by a search query looks on a map.
+
+```{python}
+map = folium.Map(
+    location=[(latmin + latmax) / 2, (lonmin + lonmax) / 2],
+    zoom_start=7,
+    zoom_control=False,
+    scrollWheelZoom=False,
+    dragging=False,
+)
+
+folium.GeoJson(area_of_interest, name="Area of Interest").add_to(map)
+
+for item in items_eodc:
+    # url leading to display of an item, can also be used as hyperlink
+    image_url = item.assets["thumbnail"].href
+    bounds = item.bbox
+    folium.raster_layers.ImageOverlay(
+        image=image_url,
+        bounds=[[bounds[1], bounds[0]], [bounds[3], bounds[2]]],
+    ).add_to(map)
+
+folium.LayerControl().add_to(map)
+
+map
+```
+
+*Figure 1: Map of study area. Blue rectangle is the area covered by the discovered data.*
+
+## Data Reading
+
+STAC can also be a useful tool for the discovery of data, however it only loads metadata. This saves memory, but if one would like to do further analysis, the data has to be loaded into memory or downloaded on disk.
+
+In the following, we will demonstrate this with the library `odc-stac`. Here we can define what data will loaded as `bands`; in this case VV sigma naught. Moreover we can resample the data by providing any coordinate reference system (CRS) and resolution as well as a method for resampling of continuos data (e.g. bilinear resampling). In the example below we use the EQUI7 Grid of Europe and a 20 meter sampling. This is the native format of sigma naught stored at EODC, so there will be no actual resampling. Note, also, that resampling is not advisable for this data, as it is provided on a logarithmic scale. More about this in notebook 2.
+
+*The chunks argument is an advancement method for performing parallel computations on the data. We will not cover this in further detail.*
+
+```{python}
+bands = "VV"  # Vertical-vertical polarized
+crs = "EPSG:27704"  # Coordinate Reference System: EQUI7 Grid of Europe
+res = 20  # 20 meter
+chunks = {"time": 1, "latitude": 1000, "longitude": 1000}
+sig0_dc = odc_stac.load(
+    items_eodc,
+    bands=bands,
+    crs=crs,
+    resolution=res,
+    bbox=bounding_box,
+    chunks=chunks,
+    resampling="bilinear",
+)
+```
+
+Let's have a look at the VV polarized band of the dataset.
+
+```{python}
+sig0_dc.VV
+```
+
+As we can see, the data is stored as a `xarray` DataArray. `Xarray` is a convenient package for multidimensional labeled arrays, like temperature, humidity, pressure, different bands of satellite imagery, and so on. [The link](https://docs.xarray.dev/en/stable/index.html) provides detailed documentation. In a later notebook we will explore some more of the functionality of `xarray`. As we can see in the coordinates, the data here consists of 21 time steps.
+
+In general, data from STAC is "lazily" loaded, which means that the structure of the DataArray is constructed, but the data is not loaded yet. It is loaded only at instance when it is needed, for example, for plotting, computations, and so on.
+
+Since the DataArray has currently a size of almost 18 GiB, we will subset it to the region of Vienna.
+
+```{python}
+# Create a bounding box covering the region of Vienna
+latmin_smaller, latmax_smaller = 48, 48.4
+lonmin_smaller, lonmax_smaller = 16, 16.5
+
+smaller_bounding_box = [
+    [latmin_smaller, lonmin_smaller],
+    [latmax_smaller, lonmax_smaller],
+]
+
+map = folium.Map(
+    location=[
+        (latmin_smaller + latmax_smaller) / 2,
+        (lonmin_smaller + lonmax_smaller) / 2,
+    ],
+    zoom_start=8,
+    zoom_control=False,
+    scrollWheelZoom=False,
+    dragging=False,
+)
+
+folium.GeoJson(area_of_interest, name="Area of Interest").add_to(map)
+
+folium.Rectangle(
+    bounds=smaller_bounding_box,
+    color="red",
+).add_to(map)
+
+for item in items_eodc:
+    image_url = item.assets["thumbnail"].href
+    bounds = item.bbox
+    folium.raster_layers.ImageOverlay(
+        image=image_url,
+        bounds=[[bounds[1], bounds[0]], [bounds[3], bounds[2]]],
+    ).add_to(map)
+
+folium.LayerControl().add_to(map)
+
+map
+```
+
+*Figure 2: Map of study area. Blue rectangle is the area covered by the discovered data. Red rectangle covers the selected data.*
+
+Create a new dataset with the smaller bounding box covering the region of Vienna. We will leave out the arguments for resampling and directly use the native format as defined in the metadata.
+
+```{python}
+sig0_dc = odc_stac.load(
+    items_eodc,
+    bands=bands,
+    bbox=[lonmin_smaller, latmin_smaller, lonmax_smaller, latmax_smaller],
+    chunks=chunks,
+)
+```
+
+Due to the way the data is acquired and stored, some items include "no data" areas. In our case, no data has the value -9999, but this can vary from data provider to data provider. This information can usually be found in the metadata. Furthermore, to save memory, data is often stored as integer (e.g. 25) and not in float (e.g. 2.5) format. For this reason, the backscatter values are often multiplied by a scale factor, in this case factor 10.
+
+As Sentinel-1 satellites overpasses Austria every few days, only some time steps of the dataset will have physical data. As a final step, we will now decode the data and create a plot of two consecutive Sentinel-1 acquisitions of Vienna.
+
+```{python}
+# Retrieve the scale factor and NoData value from the metadata. raster:bands is
+# a STAC raster extension
+scale = item.assets["VV"].extra_fields.get("raster:bands")[0]["scale"]
+nodata = item.assets["VV"].extra_fields.get("raster:bands")[0]["nodata"]
+
+# Decode data with the NoData value and the scale factor
+sig0_dc = sig0_dc.where(sig0_dc != nodata) / scale
+
+# We should remove unnecessary dates when there was no data
+# (no satellite overpass)
+sig0_dc = sig0_dc.dropna(dim="time")
+```
+
+```{python}
+sig0_dc.VV.plot(col="time", robust=True, cmap="Greys_r", aspect=1, size=10)
+```
+
+*Figure 3: Sentinel-1 microwave backscatter image for two timeslices.*

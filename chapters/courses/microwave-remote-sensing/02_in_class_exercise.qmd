@@ -1,0 +1,286 @@
+---
+title: Unit Conversion
+---
+
+In this notebook, we are going to have a look at the conversion of units. Sentinel-1 data, and most other SAR data, is usually provided in decibels (dB). In this notebook, we will discover the advantages of displaying SAR data in decibels and why we need to convert the data to a linear scale in order to make meaningful calculations. Let's start with importing some libraries.
+
+$$
+\text{logarithmic} \longleftrightarrow \text{linear}
+$$
+$$
+[\text{dB}] \longleftrightarrow [\text{m}^2 \cdot \text{m}^{-2}]
+$$
+
+
+```{python}
+import numpy as np
+import pystac_client
+import odc.stac
+import matplotlib.pyplot as plt
+import xarray as xr
+import rioxarray  # noqa
+```
+
+## Exploring the Data
+
+Let's start by loading some sample data, in order to demonstrate why this conversion is important.
+Here we will have a look at some SAR data from the Sentinel-1. The data is provided in decibels (dB).
+In the following example, we will:
+
+- load data from Sentinel-1
+- visualize the data in logarithmic scale
+- compare the data with linear scale
+
+## Search for some Data
+
+Now, we start by loading data from Sentinel-1 from the `EODC` STAC Catalogue. We do this in the same way as in the previous notebook 1.
+
+```{python}
+latmin, latmax = 48, 48.5
+lonmin, lonmax = 16, 17
+bounds = (lonmin, latmin, lonmax, latmax)
+
+time_range = "2022-01-01/2022-12-30"
+
+items = (
+    pystac_client.Client.open("https://stac.eodc.eu/api/v1")
+    .search(
+        bbox=bounds,
+        collections=["SENTINEL1_SIG0_20M"],
+        datetime=time_range,
+        limit=100,
+    )
+    .item_collection()
+)
+
+print(len(items), "scenes found")
+```
+
+```{python}
+bands = "VV"
+crs = "EPSG:27704"  # Coordinate Reference System: EQUI7 Grid of Europe
+res = 20  # 20 meter
+
+sig0_dc = odc.stac.stac_load(
+    items,
+    bands=bands,
+    bbox=bounds,
+    chunks={"time": 5, "x": 600, "y": 600},
+)
+
+nodata = items[0].assets["VV"].extra_fields["raster:bands"][0]["nodata"]
+scale = items[0].assets["VV"].extra_fields["raster:bands"][0]["scale"]
+
+sig0_dc = (sig0_dc.where(sig0_dc != nodata) / scale).VV
+sig0_dc
+```
+
+## Comparison of the Data in dB and Linear Scale
+
+In the next two cells we will select a subset of the data. This is done to reduce the amount of data we are working with. The precice workflow is not important for now, since the theory is explained after the cells. They are just here to show the data we are working with.
+
+```{python}
+subset = sig0_dc.sel(time=slice("2022-07-01", "2022-07-07"))
+subset = subset.dropna("time", how="all")
+```
+
+Now plot the data.
+
+```{python}
+#| jupyter: {source_hidden: true}
+aoi = subset.isel(time=0, x=slice(0, 500), y=slice(0, 500))
+aoi_lin = 10 ** (aoi / 10)
+
+fig, ax = plt.subplots(2, 3, figsize=(14, 8))
+# upper left
+ax_ul = ax[0, 0]
+aoi.plot.imshow(robust=True, ax=ax_ul, cmap="Greys_r")
+ax_ul.set_title(r"$\sigma^0$ [$dB$] (robust plot)")
+ax_ul.axes.set_aspect("equal")
+
+# upper middle
+ax_um = ax[0, 1]
+aoi.plot.imshow(robust=False, ax=ax_um, cmap="Greys_r")
+ax_um.set_title(r"$\sigma^0$ [$dB$] (not robust plot)")
+ax_um.axes.set_aspect("equal")
+
+# upper right
+ax_ur = ax[0, 2]
+aoi.plot.hist(bins=50, ax=ax_ur, edgecolor="black")
+ax_ur.set_xlabel(r"$\sigma^0$ [$dB$]")
+ax_ur.set_title(r"$\sigma^0$ [$dB$] distribution")
+ax_ur.set_ylabel("n (number of pixels)")
+
+# lower left
+ax_ll = ax[1, 0]
+aoi_lin.plot.imshow(robust=True, ax=ax_ll, cmap="Greys_r")
+ax_ll.set_title(r"$\sigma^0$ [$m^2 \cdot m^{-2}$] (robust plot)")
+ax_ll.axes.set_aspect("equal")
+
+# lower middle
+ax_lm = ax[1, 1]
+aoi_lin.plot.imshow(robust=False, ax=ax_lm, cmap="Greys_r")
+ax_lm.set_title(r"$\sigma^0$ [$m^2 \cdot m^{-2}$] (not robust plot)")
+ax_lm.axes.set_aspect("equal")
+
+# lower right
+ax_lr = ax[1, 2]
+aoi_lin.plot.hist(bins=50, ax=ax_lr, edgecolor="black")
+ax_lr.set_xlabel(r"$\sigma^0$ [$m^2 \cdot m^{-2}$]")
+ax_lr.set_ylabel("n (number of pixels)")
+ax_lr.set_title(r"$\sigma^0$ [$m^2 \cdot m^{-2}$] distribution")
+
+title = (
+    r"Sentinel-1 backscatter $\sigma^0$ comparison"
+    + r" in linear and logarithmic domain"
+)
+fig.suptitle(title, horizontalalignment="center")
+plt.tight_layout()
+```
+
+*Figure 1: Visually comparing $\sigma^0$ on a logarithmic and linear scale (left column). In addition, the benefit of using the robust plotting method is shown (middle column). The robust argument uses the 2^nd^ and 98^th^ percentiles of the data to compute the color limits to eliminate washing out the plot due to data outliers.*
+
+In the plot above you can see the difference between the two scales. The values in dB are more evenly distributed and are therefore easier to plot. The values in linear scale are more spread out and are therefore harder to interpret.
+This is why we use the dB scale for plotting/visualization.
+
+While the logarithmic scale facilitates visual interpretation, it has implications for mathematical operations. In the following, we'll have a closer look at this. But first, let's see how we can convert between the linear and the logarithmic domains.
+
+## Conversion Formulas
+
+The decibel (dB) is a logarithmic unit used to express the ratio of two values of a physical quantity, often power or intensity. In the case of SAR data, the backscatter coefficient is often expressed in dB to facilitate visualization.
+
+In order to convert the data from dB to linear scale, we use the following formula.
+Let $D$ be the original value (dB) and $I$ the converted value ($m^2m^{-2}$). The conversion of units can be expressed as:
+$$
+D =  10  \cdot \log_{10} (I) = 10 \cdot \log_{10} (e) \cdot \ln (I)\longrightarrow [dB]
+$$
+Similarly, the conversion back to the original unit can be expressed as:
+$$
+I = e^{\frac{D}{10\cdot \log_{10}(e)}} = 10^{\frac{D}{10}} \longrightarrow [m^2m^{-2}]
+$$
+You can find these formulas in the script for `Microwave Remote Sensing` on ``page 136 (equation 6.40)``.
+
+Now let's implement the conversion in Python.
+
+```{python}
+def lin2db(val: float | int) -> float:
+    """
+    Converts value from linear to dB units.
+
+    :param val: Value in linear units.
+    :type val: float|int
+    :return: Value in dB.
+    :rtype: float
+    """
+    return 10 * np.log10(val)
+
+
+def db2lin(val: float | int) -> float:
+    """
+    Converts value from dB to linear units.
+
+    :param val: Value in dB.
+    :type val: float|int
+    :return: Value in linear units.
+    :rtype: float
+    """
+    return 10 ** (val / 10)
+```
+
+When performing mathematical operations with SAR data it is important to be aware, that adding values in the logarithmic scale doesn't work in the same way as adding regular (linear) values. This is because in the logarithmic scale, each unit step represents an equal multiplication. This means that an addition of two values in the logarithmic scale equals a multiplication of the values in the linear scale. Vice versa, a subtraction in a logarithmic scale equals a division in a linear scale. Let's have a look at an example, where we add two values, once without the conversion to linear scale and once with the conversion to linear scale.
+
+```{python}
+# Logarithmic addition
+# Values in linear and decibel units
+val1_db, val2_db = 10, 12
+
+# Logarithmic addition
+sum_db = val1_db + val2_db
+print("Logarithmic Addition:")
+print(f"Logarithmic values: \t{val1_db: <5}, {val2_db: <5} [dB]")
+print(f"Logarithmic sum: \t{val1_db} + {val2_db} = {sum_db: <5} [dB]")
+
+# Linear addition
+val1_lin, val2_lin = db2lin(val1_db), db2lin(val2_db)
+sum_lin = val1_lin + val2_lin
+print("\nLinear Addition:")
+print(f"""Linear values: \t\t{val1_lin: <5}, {val2_lin: <5.2f} [lin]
+      \t\t\t(converted from dB)""")
+print(f"Linear sum: \t\t{val1_lin} + {val2_lin: .2f} = {sum_lin: .2f} [lin]")
+print(f"\t\t\t= {lin2db(sum_lin): .2f} [dB]")
+```
+
+As you can see, the values in dB and in linear scale differ quite a bit. In the example above, the values differ by a factor of around 6 when looked at in linear scale.
+
+Now that we have some data, we will have a look at some practical examples where we will convert the data to linear scale.
+When we try to calculate the average $\sigma^0$ value across the scene, we need to do this by converting the data to linear scale first and then calculating the average and converting it back to dB.
+
+## Creating a Monthly Mosaic
+
+So in the beginning we have lazily loaded data for an area across a whole year. We therefore have around 700 images. We will now essentially compress the data of each month into one timestamp. This is done by using the ``resampling`` method together with an operation method like ``mean`` that includes summation. Since the data is in dB we need to convert it to linear scale first, then we can resample the data and convert it back to dB.
+
+```{python}
+# Convert to linear scale and calculate monthly means
+# Conversion by calculating with the xarray Object
+sig0_lin = 10 ** (sig0_dc / 10)
+
+# Resample to monthly means. Time accepts intervals identical to the pandas
+# resample function. 'D' for days, 'W' for weeks, 'ME' for months.
+sig0_lin_monthly = sig0_lin.resample(time="1ME").mean()
+
+# Convert back to dB scale
+# Conversion by applying a function
+sig0_monthly = lin2db(sig0_lin_monthly)
+sig0_monthly
+```
+
+The dataset has now only 12 timestamps, one for each month. Next, we want to calculate the average $\sigma^0$ value across the scene for one month. We will do this again by converting the data to linear scale first and then calculating the average and converting it back to dB.
+
+```{python}
+# Lets take a data array with db values
+db_array = sig0_monthly.sel(time="2022-07-30", method="nearest")
+
+# Compute the linear values
+lin_array = db2lin(db_array)
+```
+
+```{python}
+# Compute the average backscatter value in linear units across the whole scene
+lin_mean = lin_array.mean()
+print(f"Average backscatter value in linear units: {lin_mean.values: .3f}")
+db_from_lin_mean = lin2db(lin_mean)
+print(f"That value in dB: {db_from_lin_mean.values: .3f}\n")
+
+# Compute the average backscatter value in dB across the whole scene
+db_mean = db_array.mean()
+print(f"Average backscatter value in dB: {db_mean.values: .3f}")
+```
+
+As you can see in the example, the mean values across the scene are different in dB and linear scale. Therefore, it is important to be aware in which scale the data is stored to perform the correct type of mathematical operation or always convert the data to linear scale before doing any calculations.
+
+## Save Mean Mosaic as Tif File
+
+Often we want to store the output of a computation permanently on a file system. The most common file format for this is a GeoTIFF (TIF file with additional information on the georeference). The following cell indicates how this can be easily done with Xarray. When we want to store the data as a GeoTIFF we need to make sure to provide a spatial reference to geolocate the data. The best way to check whether the Xarray has a coordinate reference system (CRS) is by using the rioxarray `rio.crs` accessor. More about this in notebook 4.
+
+```{python}
+# Select some data which we want to save
+data_2_save = sig0_monthly.sel(time="2022-07-30", method="nearest")
+data_2_save.rio.crs
+```
+
+In this case, the spatial reference is the EPSG Code `EPSG:27704`, which is the `Equi7Grid Europe`.
+As the output dataarray already has a spatial reference we now save it as a raster file
+
+```{python}
+# Save the data
+data_2_save.rio.to_raster(
+    "sig0_mean_mosaic_july.tif", tiled=True, driver="GTiff", compress="LZW"
+)
+```
+
+```{python}
+# Load the data again (for demonstration purposes)
+loaded_data = xr.open_dataset("sig0_mean_mosaic_july.tif", engine="rasterio")
+loaded_data
+```
+

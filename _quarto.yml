@@ -10,15 +10,16 @@ book:
   date: "7/10/2024"
   chapters:
     - index.qmd
-    - part: "Courses"
+    - part: "chapters/courses/Microwave-remote-sensing.qmd"
       chapters:
-        - chapters/Placeholder.qmd
+        - chapters/courses/microwave-remote-sensing/01_in_class_exercise.qmd
+  appendices:
+    - part: "Templates"
+      chapters:
+        - chapters/templates/Classification.qmd
     - part: "Tutorials"
       chapters:
-        - chapters/Classification.qmd
-    - part: "Lessons"
-      chapters:
-        - chapters/Floodmapping.qmd
+        - chapters/tutorials/Floodmapping.qmd
     - chapters/references.qmd
   navbar:
     logo: assets/images/tuw-geo_eodc_logo_horizontal.png
@@ -34,4 +35,5 @@ format:
 
 execute:
   freeze: auto
+  cache: true
   keep-ipynb: true
