@@ -3,9 +3,8 @@ SHELL = /bin/bash
 .PHONY: help clean environment kernel teardown post-render dev
 
 YML = $(wildcard notebooks/**/*.yml)
-QNB = $(shell find chapters -name *.quarto_ipynb)
-NB = $(shell find chapters -name *.ipynb -not -path "*/.jupyter_cache/*")
 REQ = $(basename $(notdir $(YML)))
+NB = $(shell find chapters -name *.quarto_ipynb -o  -name *.ipynb -not -path "*/.jupyter_cache/*")
 BASENAME = $(CURDIR)
 
 CONDA_ACTIVATE = source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
@@ -30,6 +29,9 @@ help:
 clean:
 	rm --force --recursive .ipynb_checkpoints/ **/.ipynb_checkpoints/ _book/ \
 		_freeze/ .quarto/ _preview/ ./pytest_cache ./**/**/**/.jupyter_cache ./**/**/.jupyter_cache
+
+strip:
+	rm --force --recursive ./chapters/**/**/*.ipynb ./chapters/**/*.ipynb ./chapters/**/**/*.quarto_ipynb ./chapters/**/*.quarto_ipynb
 
 teardown:
 	$(foreach f, $(REQ), \
@@ -65,11 +67,9 @@ dev: $(CONDA_ENV_DEV_DIR)
 
 post-render: dev
 	$(CONDA_ACTIVATE) eo-datascience
-	- $(foreach f, $(QNB), \
-			mv -- "$f" "$(subst .quarto_ipynb,.ipynb,$f)" ; )
 	$(foreach f, $(NB), \
-			nbstripout $f && mv $f "$(subst chapters,notebooks,$(dir $f))"; )
-
+			nbstripout $f; \
+			mv $f "$(subst chapters,notebooks,$(subst .quarto_ipynb,.ipynb,$f))"; )
 
 preview: $(KERNEL_DIR) dev
 	$(CONDA_ACTIVATE) eo-datascience

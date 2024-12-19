@@ -13,6 +13,7 @@ book:
     - part: "chapters/courses/Microwave-remote-sensing.qmd"
       chapters:
         - chapters/courses/microwave-remote-sensing/01_in_class_exercise.qmd
+        - chapters/courses/microwave-remote-sensing/02_in_class_exercise.qmd
   appendices:
     - part: "Templates"
       chapters:
