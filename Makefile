@@ -65,10 +65,8 @@ $(CONDA_ENV_DEV_DIR): environment.yml
 dev: $(CONDA_ENV_DEV_DIR)
 	@echo -e "conda development environment is ready."
 
-post-render: dev
-	$(CONDA_ACTIVATE) eo-datascience
+post-render:
 	$(foreach f, $(NB), \
-			nbstripout $f; \
 			mv $f "$(subst chapters,notebooks,$(subst .quarto_ipynb,.ipynb,$f))"; )
 
 preview: $(KERNEL_DIR) dev
