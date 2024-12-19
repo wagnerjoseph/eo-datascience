@@ -2,9 +2,9 @@
 title: Discover and Read Sentinel 1 Data
 jupyter:
   kernelspec:
-    name: "Microwave-remote-sensing"
+    name: "microwave-remote-sensing"
     language: "python"
-    display_name: "Microwave-remote-sensing"
+    display_name: "microwave-remote-sensing"
 ---
 
 

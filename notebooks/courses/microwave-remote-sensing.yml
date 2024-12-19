@@ -1,4 +1,4 @@
-name: Microwave-remote-sensing
+name: microwave-remote-sensing
 channels:
   - conda-forge
 dependencies:

@@ -10,10 +10,7 @@ BASENAME = $(CURDIR)
 CONDA_ACTIVATE = source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
 CONDA_ENV_DIR := $(foreach i,$(REQ),$(shell conda info --base)/envs/$(i))
 CONDA_ENV_DEV_DIR := $(shell conda info --base)/envs/eo-datascience
-KERNEL_DIR := $(foreach i,$(REQ),$(shell jupyter --data-dir)/kernels/$(i))
-
-nb:
-	@echo $(NB)
+KERNEL_DIR := $(foreach i,$(REQ), $(shell jupyter --data-dir)/kernels/$(i))
 
 help:
 	@echo "Makefile for setting up environment, kernel, and pulling notebooks"
@@ -29,9 +26,6 @@ help:
 clean:
 	rm --force --recursive .ipynb_checkpoints/ **/.ipynb_checkpoints/ _book/ \
 		_freeze/ .quarto/ _preview/ ./pytest_cache ./**/**/**/.jupyter_cache ./**/**/.jupyter_cache
-
-strip:
-	rm --force --recursive ./chapters/**/**/*.ipynb ./chapters/**/*.ipynb ./chapters/**/**/*.quarto_ipynb ./chapters/**/*.quarto_ipynb
 
 teardown:
 	$(foreach f, $(REQ), \
@@ -49,15 +43,13 @@ environment: $(CONDA_ENV_DIR)
 	@echo -e "conda environments are ready."
 
 $(KERNEL_DIR): environment
-	- python -m pip install --upgrade pip
-	python -m pip install jupyter
 	$(foreach f, $(REQ), \
 		$(CONDA_ACTIVATE) $(f); \
 		python -m ipykernel install --user --name $(f) --display-name $(f); \
 		conda deactivate; )
 
 kernel: $(KERNEL_DIR)
-	@echo -e "conda jupyter kernel is ready."
+	@echo -e "jupyter kernel is ready."
 
 $(CONDA_ENV_DEV_DIR): environment.yml
 	conda env create --file $^ -y
@@ -67,7 +59,7 @@ dev: $(CONDA_ENV_DEV_DIR)
 
 post-render:
 	$(foreach f, $(NB), \
-			mv $f "$(subst chapters,notebooks,$(subst .quarto_ipynb,.ipynb,$f))"; )
+			mv $(f) "$(subst chapters,notebooks,$(subst .quarto_ipynb,.ipynb,$(f)))"; )
 
 preview: $(KERNEL_DIR) dev
 	$(CONDA_ACTIVATE) eo-datascience

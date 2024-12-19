@@ -10,17 +10,17 @@ book:
   date: "7/10/2024"
   chapters:
     - index.qmd
-    - part: "chapters/courses/Microwave-remote-sensing.qmd"
+    - part: "chapters/courses/microwave-remote-sensing.qmd"
       chapters:
         - chapters/courses/microwave-remote-sensing/01_in_class_exercise.qmd
         - chapters/courses/microwave-remote-sensing/02_in_class_exercise.qmd
   appendices:
     - part: "Templates"
       chapters:
-        - chapters/templates/Classification.qmd
+        - chapters/templates/classification.qmd
     - part: "Tutorials"
       chapters:
-        - chapters/tutorials/Floodmapping.qmd
+        - chapters/tutorials/floodmapping.qmd
     - chapters/references.qmd
   navbar:
     logo: assets/images/tuw-geo_eodc_logo_horizontal.png
