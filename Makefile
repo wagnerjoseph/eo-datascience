@@ -42,14 +42,14 @@ $(CONDA_ENV_DIR):
 environment: $(CONDA_ENV_DIR)
 	@echo -e "conda environments are ready."
 
-$(KERNEL_DIR): environment
+$(KERNEL_DIR):
 	$(foreach f, $(REQ), \
 		$(CONDA_ACTIVATE) $(f); \
 		python -m ipykernel install --user --name $(f) --display-name $(f); \
 		conda deactivate; )
 
-kernel: $(KERNEL_DIR)
-	@echo -e "jupyter kernel is ready."
+kernel: $(KERNEL_DIR) environment
+	@echo -e "jupyter kernels are ready."
 
 $(CONDA_ENV_DEV_DIR): environment.yml
 	conda env create --file $^ -y
@@ -64,9 +64,9 @@ post-render:
 preview: $(KERNEL_DIR) dev
 	$(CONDA_ACTIVATE) eo-datascience
 	- mkdir -p _preview/notebooks
-	python -m pip install .
+	python -m pip install -e .
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/README.md -nc -P ./_preview
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/notebooks/how-to-cite.md -nc -P ./_preview/notebooks
-	render_sfinx_toc ./_preview
+	# render_sfinx_toc ./_preview
 	clean_nb ./notebooks ./_preview/notebooks
 	jupyter-book build ./_preview ; jupyter-book build ./_preview

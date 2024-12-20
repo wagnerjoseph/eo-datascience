@@ -18,6 +18,7 @@ from eo_datascience.clean_nb import (
     convert_callout_notes,
     quarto_note_replace,
     find_ipynb,
+    substitute_path,
 )
 
 
@@ -36,15 +37,17 @@ def test_toc_conversion():
       date: "7/10/2024"
       chapters:
           - index.qmd
-          - part: "Name of Part 1"
-            chapters:
-                - chapters/01_notebook.qmd
-                - chapters/02_notebook.qmd
-          - part: "Name of Part 2"
-            chapters:
-                - chapters/03_notebook.qmd
-                - chapters/04_notebook.qmd
-          - part: "Nothing here"
+          - part: chapters/courses/microwave-remote-sensing.qmd
+          chapters:
+              - chapters/courses/microwave-remote-sensing/01_in_class_exercise.qmd
+              - chapters/courses/microwave-remote-sensing/02_in_class_exercise.qmd
+      appendices:
+          - part: "Templates"
+          chapters:
+              - chapters/templates/classification.qmd
+          - part: "Tutorials"
+          chapters:
+              - chapters/tutorials/floodmapping.qmd
           - chapters/references.qmd
     """
 
@@ -55,15 +58,17 @@ def test_toc_conversion():
     - caption: Preamble
       chapters:
         - file: notebooks/how-to-cite
-    - caption: Name of Part 1
+    - caption: Courses
       chapters:
-        - file: notebooks/01_notebook
-        - file: notebooks/02_notebook
-    - caption: Name of Part 2
+      - file: notebooks/courses/microwave-remote-sensing
+      sections:
+        - file: notebooks/courses/microwave-remote-sensing/01_in_class_exercise
+        - file: notebooks/courses/microwave-remote-sensing/02_in_class_exercise
+    - caption: Templates
       chapters:
-        - file: notebooks/03_notebook
-        - file: notebooks/04_notebook
-    - caption: Nothing here
+        - file: notebooks/templates/classification
+    - caption: Tutorials
+        - file: notebooks/tutorials/floodmapping
     - caption: References
       chapters:
         - file: notebooks/references
@@ -74,7 +79,7 @@ def test_toc_conversion():
     assert len(sec) == 3
     assert rename_file_path("chapters/01_notebook.qmd") == "notebooks/01_notebook"
     assert rename_keys_section(sec[0]) == {'caption': 'Name of Part 1', 'chapters': [{"file" : 'notebooks/01_notebook'}, {"file": 'notebooks/02_notebook'}]}
-    
+
     quarto_toc_transform = transform_quarto_toc(ini)
     assert len(sec) == len(quarto_toc_transform)
 
@@ -92,6 +97,12 @@ def test_remove_front_matter():
 
 def test_find_ipynb():
     assert find_ipynb("tests")[0].stem == "mock"
+
+
+def test_substitute_path():
+    nb_path = find_ipynb("tests")[0]
+    assert substitute_path(nb_path, "./tests", "./tests/tests") == Path('./tests/tests/mock.ipynb')
+    assert substitute_path(nb_path, "./tests", None) == Path('./tests/mock.ipynb')
 
 
 def test_conversion_of_refs():

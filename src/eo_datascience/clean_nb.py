@@ -34,11 +34,9 @@ def clean_up_frontmatter(dir="./notebooks", out=None, save=True):
             nb.cells[0].source = "\n".join(new_text) + "\n"
             nb.cells[0].cell_type = "markdown"
         # Save notebook
+        nb_path = substitute_path(nb_path, dir, out)
         if save:
-            if out is not None:
-                nbformat.write(nb, (Path(out).resolve() / nb_path.name).as_posix())
-            else:
-                nbformat.write(nb, nb_path)
+            nbformat.write(nb, nb_path)
         else:
             return nb
 
@@ -53,11 +51,9 @@ def convert_bibliography(nb_path="./notebooks/references.ipynb", out=None, save=
     ```
     """
         # Save the notebook
+        nb_path = substitute_path(nb_path, nb_path.parent, out)
         if save:
-            if out is not None:
-                nbformat.write(nb, Path(out).resolve() / nb_path.name)
-            else:
-                nbformat.write(nb, nb_path)
+            nbformat.write(nb, nb_path)
         else:
             return nb
 
@@ -72,11 +68,10 @@ def convert_callout_notes(dir="./notebooks", out=None, save=True):
         for i in range(len(nb.cells)):
             if nb.cells[i]["cell_type"] == "markdown":
                 nb.cells[i].source = quarto_note_replace(nb.cells[i].source)
+        # Save the notebook
+        nb_path = substitute_path(nb_path, dir, out)
         if save:
-            if out is not None:
-                nbformat.write(nb, Path(out).resolve() / nb_path.name)
-            else:
-                nbformat.write(nb, nb_path)
+            nbformat.write(nb, nb_path)
         else:
             return nb
 
@@ -110,11 +105,9 @@ def convert_refs(dir="./notebooks", out=None, save=True):
             nb
 
         # Save the notebook
+        nb_path = substitute_path(nb_path, dir, out)
         if save:
-            if out is not None:
-                nbformat.write(nb, Path(out).resolve() / nb_path.name)
-            else:
-                nbformat.write(nb, nb_path)
+            nbformat.write(nb, nb_path)
         else:
             return nb
 
@@ -141,9 +134,15 @@ def quarto_ref_time_replace(quarto):
 
 
 def find_ipynb(dir):
-    root = Path(dir).resolve()
-    nb_paths = [root / file for file in os.listdir(root) if file.endswith(".ipynb")]
-    return nb_paths
+    return list(Path(dir).rglob("*.ipynb"))
+
+
+def substitute_path(nb_path, dir, out):
+    if out is not None:
+        nb_path = Path(str(nb_path).replace(str(Path(dir)), str(Path(out))))
+        if not nb_path.exists():
+            nb_path.parent.mkdir(parents=True, exist_ok=True)
+    return nb_path
 
 
 def main():
@@ -153,8 +152,8 @@ def main():
     args = parser.parse_args()
 
     clean_up_frontmatter(args.dir, args.out)
-    convert_callout_notes(args.out, args.out)
-    convert_refs(args.out, args.out)
+    convert_callout_notes(args.out)
+    convert_refs(args.out)
     convert_bibliography(out=args.out)
 
 

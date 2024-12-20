@@ -3,19 +3,14 @@ SHELL = /bin/bash
 .PHONY: help clean environment kernel teardown post-render dev
 
 YML = $(wildcard notebooks/**/*.yml)
-NB = $(shell find chapters -name *.ipynb -not -path **/.jupyter_cache/*)
-NB :=  $(subst chapters/,,$(NB))
-QNB = $(shell find chapters -name *.quarto_ipynb)
 REQ = $(basename $(notdir $(YML)))
+NB = $(shell find chapters -name *.quarto_ipynb -o  -name *.ipynb -not -path "*/.jupyter_cache/*")
 BASENAME = $(CURDIR)
 
 CONDA_ACTIVATE = source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
 CONDA_ENV_DIR := $(foreach i,$(REQ),$(shell conda info --base)/envs/$(i))
 CONDA_ENV_DEV_DIR := $(shell conda info --base)/envs/eo-datascience
-KERNEL_DIR := $(foreach i,$(REQ),$(shell jupyter --data-dir)/kernels/$(i))
-
-nb:
-	echo $(QNB)
+KERNEL_DIR := $(foreach i,$(REQ), $(shell jupyter --data-dir)/kernels/$(i))
 
 help:
 	@echo "Makefile for setting up environment, kernel, and pulling notebooks"
@@ -40,23 +35,21 @@ teardown:
 		conda remove -n $(f) --all -y ; \
 		conda deactivate; )
 
-$(CONDA_ENV_DIR): $(YML)
+$(CONDA_ENV_DIR):
 	- conda update -n base -c conda-forge conda -y
-	$(foreach f, $^, conda env create --file $(f); )
+	$(foreach f, $(YML), conda env create --file $(f); )
 
 environment: $(CONDA_ENV_DIR)
 	@echo -e "conda environments are ready."
 
-$(KERNEL_DIR): environment
-	- python -m pip install --upgrade pip
-	python -m pip install jupyter
+$(KERNEL_DIR):
 	$(foreach f, $(REQ), \
 		$(CONDA_ACTIVATE) $(f); \
 		python -m ipykernel install --user --name $(f) --display-name $(f); \
 		conda deactivate; )
 
-kernel: $(KERNEL_DIR)
-	@echo -e "conda jupyter kernel is ready."
+kernel: $(KERNEL_DIR) environment
+	@echo -e "jupyter kernels are ready."
 
 $(CONDA_ENV_DEV_DIR): environment.yml
 	conda env create --file $^ -y
@@ -64,14 +57,9 @@ $(CONDA_ENV_DEV_DIR): environment.yml
 dev: $(CONDA_ENV_DEV_DIR)
 	@echo -e "conda development environment is ready."
 
-post-render: dev
-	$(CONDA_ACTIVATE) eo-datascience
-	- $(foreach f, $(QNB), \
-			mv -- "$f" "${f%%.quarto_ipynb}.ipynb" >/dev/null 2>&1; )
-	nbstripout chapters/$(NB)
-	cd chapters && cp --parents $(NB) ../notebooks/
-	rm -rf $(NB)
-	cp ../Makefile ../notebooks/
+post-render:
+	$(foreach f, $(NB), \
+			mv $(f) "$(subst chapters,notebooks,$(subst .quarto_ipynb,.ipynb,$(f)))"; )
 
 preview: $(KERNEL_DIR) dev
 	$(CONDA_ACTIVATE) eo-datascience
