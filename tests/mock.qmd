@@ -1,0 +1,13 @@
+---
+title: This a mock Jupyter file
+subtitle: We use it for testing
+author: anonymous
+jupyter: python3
+---
+
+::: {.callout-note}
+This a callout note.
+:::
+
+lorem ipsum [@anon2024] and [@anon2025] and lorem ipsum @anon2024 and @anon2025
+

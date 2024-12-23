@@ -6,6 +6,7 @@ dependencies:
   - pip
   - mamba
   - jupyter
+  - jupyter-cache
   - nbformat
   - pre-commit
   - nbstripout
