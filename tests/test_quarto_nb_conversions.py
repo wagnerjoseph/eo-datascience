@@ -3,10 +3,11 @@ from pathlib import Path
 import pytest
 import yaml
 from eo_datascience.render_sfinx_toc import (
-    render_toc,
-    render_toc_,
-    transform_quarto_toc,
-    extract_section,
+    _render_toc,
+    transform_main,
+    transform_appendix,
+    extract_main,
+    extract_appendix,
     rename_keys_section,
     rename_file_path,
 )
@@ -23,7 +24,6 @@ from eo_datascience.clean_nb import (
 
 
 def test_toc_conversion():
-
     mock_quarto_toc = """
     project:
       type: book
@@ -36,19 +36,19 @@ def test_toc_conversion():
       author: ""
       date: "7/10/2024"
       chapters:
-          - index.qmd
-          - part: chapters/courses/microwave-remote-sensing.qmd
+        - index.qmd
+        - part: chapters/courses/microwave-remote-sensing.qmd
           chapters:
-              - chapters/courses/microwave-remote-sensing/01_in_class_exercise.qmd
-              - chapters/courses/microwave-remote-sensing/02_in_class_exercise.qmd
+            - chapters/courses/microwave-remote-sensing/01_in_class_exercise.qmd
+            - chapters/courses/microwave-remote-sensing/02_in_class_exercise.qmd
       appendices:
-          - part: "Templates"
+        - part: "Templates"
           chapters:
-              - chapters/templates/classification.qmd
-          - part: "Tutorials"
+            - chapters/templates/classification.qmd
+        - part: "Tutorials"
           chapters:
-              - chapters/tutorials/floodmapping.qmd
-          - chapters/references.qmd
+            - chapters/tutorials/floodmapping.qmd
+        - chapters/references.qmd
     """
 
     mock_jb_toc = """
@@ -68,27 +68,51 @@ def test_toc_conversion():
       chapters:
         - file: notebooks/templates/classification
     - caption: Tutorials
+      chapters:
         - file: notebooks/tutorials/floodmapping
     - caption: References
       chapters:
         - file: notebooks/references
     """
 
-    ini = yaml.safe_load(mock_quarto_toc)
-    sec = extract_section(ini)
-    assert len(sec) == 3
-    assert rename_file_path("chapters/01_notebook.qmd") == "notebooks/01_notebook"
-    assert rename_keys_section(sec[0]) == {'caption': 'Name of Part 1', 'chapters': [{"file" : 'notebooks/01_notebook'}, {"file": 'notebooks/02_notebook'}]}
+    quarto_toc = yaml.safe_load(mock_quarto_toc)
 
-    quarto_toc_transform = transform_quarto_toc(ini)
-    assert len(sec) == len(quarto_toc_transform)
+    main = extract_main(quarto_toc)
+    assert len(main) == 1
+    assert rename_file_path("tests/mock.qmd") == "tests/mock"
+    assert rename_keys_section(main, "main") == [
+        {
+            "caption": "Courses",
+            "chapters": [{"file": "notebooks/courses/microwave-remote-sensing"}],
+            "sections": [
+                {"file": "notebooks/courses/microwave-remote-sensing/01_in_class_exercise"},
+                {"file": "notebooks/courses/microwave-remote-sensing/02_in_class_exercise"},
+            ],
+        }
+    ]
 
-    assert render_toc_(ini) == yaml.safe_load(mock_jb_toc)
-    render_toc(Path("_quarto.yml").absolute().as_posix())
+    append = extract_appendix(quarto_toc)
+    assert len(append) == 2
+    assert rename_keys_section(append, "appendix") == [
+        {"caption": 'Templates', "chapters": [{'file': 'notebooks/templates/classification'}]},
+        {"caption": 'Tutorials', "chapters": [{'file': 'notebooks/tutorials/floodmapping'}]},
+    ]
+
+    quarto_toc_transform = transform_main(quarto_toc)
+    assert len(main) == len(quarto_toc_transform)
+
+    quarto_toc_transform = transform_appendix(quarto_toc)
+    assert len(append) == len(quarto_toc_transform)
+
+    assert _render_toc(quarto_toc) == yaml.safe_load(mock_jb_toc)
+
 
 
 def test_remove_front_matter():
-    assert clean_up_frontmatter("./tests", None, False)["cells"][0]["cell_type"] == "markdown"
+    assert (
+        clean_up_frontmatter("./tests", None, False)["cells"][0]["cell_type"]
+        == "markdown"
+    )
     assert (
         clean_up_frontmatter("./tests", None, False)["cells"][0]["source"]
         == "# This a mock Jupyter file\n**We use it for testing**\n\nSome other text, which should not be deleted!\n"
@@ -101,8 +125,10 @@ def test_find_ipynb():
 
 def test_substitute_path():
     nb_path = find_ipynb("tests")[0]
-    assert substitute_path(nb_path, "./tests", "./tests/tests") == Path('./tests/tests/mock.ipynb')
-    assert substitute_path(nb_path, "./tests", None) == Path('./tests/mock.ipynb')
+    assert substitute_path(nb_path, "./tests", "./tests/tests") == Path(
+        "./tests/tests/mock.ipynb"
+    )
+    assert substitute_path(nb_path, "./tests", None) == Path("./tests/mock.ipynb")
 
 
 def test_conversion_of_refs():
