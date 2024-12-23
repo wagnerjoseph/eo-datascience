@@ -61,9 +61,9 @@ def test_toc_conversion():
     - caption: Courses
       chapters:
       - file: notebooks/courses/microwave-remote-sensing
-      sections:
-        - file: notebooks/courses/microwave-remote-sensing/01_in_class_exercise
-        - file: notebooks/courses/microwave-remote-sensing/02_in_class_exercise
+        sections:
+          - file: notebooks/courses/microwave-remote-sensing/01_in_class_exercise
+          - file: notebooks/courses/microwave-remote-sensing/02_in_class_exercise
     - caption: Templates
       chapters:
         - file: notebooks/templates/classification
@@ -83,10 +83,18 @@ def test_toc_conversion():
     assert rename_keys_section(main, "main") == [
         {
             "caption": "Courses",
-            "chapters": [{"file": "notebooks/courses/microwave-remote-sensing"}],
-            "sections": [
-                {"file": "notebooks/courses/microwave-remote-sensing/01_in_class_exercise"},
-                {"file": "notebooks/courses/microwave-remote-sensing/02_in_class_exercise"},
+            "chapters": [
+                {
+                    "file": "notebooks/courses/microwave-remote-sensing",
+                    "sections": [
+                        {
+                            "file": "notebooks/courses/microwave-remote-sensing/01_in_class_exercise"
+                        },
+                        {
+                            "file": "notebooks/courses/microwave-remote-sensing/02_in_class_exercise"
+                        },
+                    ],
+                },
             ],
         }
     ]
@@ -94,8 +102,14 @@ def test_toc_conversion():
     append = extract_appendix(quarto_toc)
     assert len(append) == 2
     assert rename_keys_section(append, "appendix") == [
-        {"caption": 'Templates', "chapters": [{'file': 'notebooks/templates/classification'}]},
-        {"caption": 'Tutorials', "chapters": [{'file': 'notebooks/tutorials/floodmapping'}]},
+        {
+            "caption": "Templates",
+            "chapters": [{"file": "notebooks/templates/classification"}],
+        },
+        {
+            "caption": "Tutorials",
+            "chapters": [{"file": "notebooks/tutorials/floodmapping"}],
+        },
     ]
 
     quarto_toc_transform = transform_main(quarto_toc)
@@ -105,7 +119,6 @@ def test_toc_conversion():
     assert len(append) == len(quarto_toc_transform)
 
     assert _render_toc(quarto_toc) == yaml.safe_load(mock_jb_toc)
-
 
 
 def test_remove_front_matter():

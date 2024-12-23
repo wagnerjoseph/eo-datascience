@@ -67,6 +67,6 @@ preview: $(KERNEL_DIR) dev
 	python -m pip install -e .
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/README.md -nc -P ./_preview
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/notebooks/how-to-cite.md -nc -P ./_preview/notebooks
-	# render_sfinx_toc ./_preview
+	render_sfinx_toc ./_preview
 	clean_nb ./notebooks ./_preview/notebooks
 	jupyter-book build ./_preview ; jupyter-book build ./_preview

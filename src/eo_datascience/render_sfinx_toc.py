@@ -39,8 +39,13 @@ def rename_keys_section(sections, part="main"):
     for i, section in enumerate(sections):
         sections[i] = _rename_keys_section(section, ("part", "caption"))
         if part == "main":
-            sections[i]["sections"] = sections[i]["chapters"]
-            sections[i]["chapters"] = sections[i]["caption"]
+            restruct = [
+                {
+                    "file": sections[i]["caption"][i]["file"],
+                    "sections": sections[i]["chapters"],
+                }
+            ]
+            sections[i]["chapters"] = restruct
             sections[i]["caption"] = "Courses"
         else:
             sections[i]["caption"] = sections[i]["caption"][0]["file"]
