@@ -48,7 +48,7 @@ $(KERNEL_DIR):
 		python -m ipykernel install --user --name $(f) --display-name $(f); \
 		conda deactivate; )
 
-kernel: $(KERNEL_DIR) environment
+kernel: $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	@echo -e "jupyter kernels are ready."
 
 $(CONDA_ENV_DEV_DIR): environment.yml
@@ -60,6 +60,7 @@ dev: $(CONDA_ENV_DEV_DIR)
 post-render:
 	$(foreach f, $(NB), \
 			mv $(f) "$(subst chapters,notebooks,$(subst .quarto_ipynb,.ipynb,$(f)))"; )
+	cp ./Makefile ./notebooks/
 
 preview: $(KERNEL_DIR) dev
 	$(CONDA_ACTIVATE) eo-datascience
