@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-      - run: pip install jupyter
+      - run: pip install jupyter jupyter-cache
 
       - name: Restore Cache Conda Environments
         uses: actions/cache/restore@v4
