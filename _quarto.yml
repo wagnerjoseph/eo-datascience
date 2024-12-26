@@ -8,8 +8,11 @@ project:
 
 book:
   title: "Earth Observation Datascience"
-  author: ""
-  date: "7/10/2024"
+  author:
+    - Nikolas Pikall
+    - Martin Schobben
+    - Wolfgang Wagner
+  date: "`python -c \"import datetime; print(datetime.datetime.now())\"`"
   chapters:
     - index.qmd
     - part: chapters/courses/microwave-remote-sensing.qmd
