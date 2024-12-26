@@ -30,7 +30,7 @@ jobs:
             ~/.local/share/jupyter/kernels
             ~/.cache/pip
             /usr/share/miniconda/envs
-          key: ${{ runner.os }}-conda-${{ hashFiles('notebooks/*.yml') }}
+          key: ${{ runner.os }}-conda-${{ hashFiles('./environment.yml', './notebooks/**/*.yml') }}
 
       - name: Render and Publish
         id: setup-python
@@ -47,11 +47,11 @@ jobs:
             ~/.local/share/jupyter/kernels
             ~/.cache/pip
             /usr/share/miniconda/envs
-          key: ${{ runner.os }}-conda-${{ hashFiles('notebooks/*.yml') }}
+          key: ${{ runner.os }}-conda-${{ hashFiles('./environment.yml', './notebooks/**/*.yml') }}
 
       # - name: Cache Binder Build on mybinder.org
       #   uses: jupyterhub/repo2docker-action@master
       #   with:
       #     NO_PUSH: true
-      #     MYBINDERORG_TAG: ${{ github.event.ref }} 
+      #     MYBINDERORG_TAG: ${{ github.event.ref }}
       #     REPO2DOCKER_EXTRA_ARGS: --subdir notebooks
