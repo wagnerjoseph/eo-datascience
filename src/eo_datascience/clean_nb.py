@@ -1,4 +1,3 @@
-import os
 import nbformat
 from pathlib import Path
 import re
@@ -45,11 +44,12 @@ def convert_bibliography(nb_path="./notebooks/references.ipynb", out=None, save=
     nb_path = Path(nb_path)
     if nb_path.exists():
         nb = nbformat.read(nb_path, as_version=4)
-        nb.cells[0].source = """# References
-
-    ```{bibliography}
-    ```
-    """
+        nb.cells[0].source = \
+"""# References
+```{bibliography}
+:style: plain
+```
+"""
         # Save the notebook
         nb_path = substitute_path(nb_path, nb_path.parent, out)
         if save:
@@ -97,12 +97,10 @@ def convert_refs(dir="./notebooks", out=None, save=True):
         # Load the notebook
         nb = nbformat.read(nb_path, as_version=4)
         for i in range(len(nb.cells)):
-            if i != 0:
-                if nb.cells[i]["cell_type"] == "markdown":
-                    nb.cells[i].source = quarto_ref_figure_replace(nb.cells[i].source)
-                    nb.cells[i].source = quarto_ref_person_replace(nb.cells[i].source)
-                    nb.cells[i].source = quarto_ref_time_replace(nb.cells[i].source)
-            nb
+            if nb.cells[i]["cell_type"] == "markdown":
+                nb.cells[i].source = quarto_ref_figure_replace(nb.cells[i].source)
+                nb.cells[i].source = quarto_ref_person_replace(nb.cells[i].source)
+                nb.cells[i].source = quarto_ref_time_replace(nb.cells[i].source)
 
         # Save the notebook
         nb_path = substitute_path(nb_path, dir, out)
