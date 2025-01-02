@@ -56,11 +56,15 @@ preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	$(CONDA_ACTIVATE) eo-datascience
 	- mkdir -p _preview/notebooks
 	python -m pip install -e .
+	cp ./chapters/references.bib ./_preview/notebooks/
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/README.md -nc -P ./_preview
+	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/_config.yml -nc -P ./_preview
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/notebooks/how-to-cite.md -nc -P ./_preview/notebooks
+	wget -O - https://github.com/TUW-GEO/eo-datascience-cookbook/archive/main.tar.gz | tar xz -C ./_preview/notebooks --strip=2 "eo-datascience-cookbook-main/notebooks/images"
 	render_sfinx_toc ./_preview
 	clean_nb ./notebooks ./_preview/notebooks
-	jupyter-book build ./_preview ; jupyter-book build ./_preview
+	jupyter-book build ./_preview
+	jupyter-book build ./_preview
 
 clean:
 	rm --force --recursive .ipynb_checkpoints/ **/.ipynb_checkpoints/ _book/ \
