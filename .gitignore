@@ -4,7 +4,6 @@
 # Temporary and binary files
 .quarto/
 _book/
-data/
 _freeze/
 *_files/
 .jupyter_cache/
@@ -69,3 +68,6 @@ venv
 _toc.yml
 /_preview/
 /.quarto/
+
+# Data
+/**/*.zarr

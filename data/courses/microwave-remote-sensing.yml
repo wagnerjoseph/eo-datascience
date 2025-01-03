@@ -1,0 +1,60 @@
+aliases: {}
+data:
+  322cabdab4de7378:
+    datatype: intake.readers.datatypes:Zarr
+    kwargs:
+      root: ''
+      storage_options: null
+      url: microwave-remote-sensing/coef.zarr
+    metadata: {}
+    user_parameters: {}
+  413644c369ca97be:
+    datatype: intake.readers.datatypes:Zarr
+    kwargs:
+      root: ''
+      storage_options: null
+      url: microwave-remote-sensing/gtc.zarr
+    metadata: {}
+    user_parameters: {}
+  d7a4ad47a0a7554a:
+    datatype: intake.readers.datatypes:Zarr
+    kwargs:
+      root: ''
+      storage_options: null
+      url: microwave-remote-sensing/rtc.zarr
+    metadata: {}
+    user_parameters: {}
+entries:
+  coef:
+    kwargs:
+      args:
+      - '{data(322cabdab4de7378)}'
+      chunks: {}
+      decode_coords: all
+    metadata: {}
+    output_instance: xarray:Dataset
+    reader: intake.readers.readers:XArrayDatasetReader
+    user_parameters: {}
+  gtc:
+    kwargs:
+      args:
+      - '{data(413644c369ca97be)}'
+      chunks: {}
+      decode_coords: all
+    metadata: {}
+    output_instance: xarray:Dataset
+    reader: intake.readers.readers:XArrayDatasetReader
+    user_parameters: {}
+  rtc:
+    kwargs:
+      args:
+      - '{data(d7a4ad47a0a7554a)}'
+      chunks: {}
+      decode_coords: all
+    metadata: {}
+    output_instance: xarray:Dataset
+    reader: intake.readers.readers:XArrayDatasetReader
+    user_parameters: {}
+metadata: {}
+user_parameters: {}
+version: 2

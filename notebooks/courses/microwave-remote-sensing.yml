@@ -11,6 +11,8 @@ dependencies:
   - graphviz
   - holoviews
   - hvplot
+  - intake
+  - intake-xarray
   - ipywidgets
   - ipympl
   - jupyter
