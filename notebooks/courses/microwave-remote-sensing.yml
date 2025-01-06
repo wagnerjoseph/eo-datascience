@@ -2,6 +2,7 @@ name: microwave-remote-sensing
 channels:
   - conda-forge
 dependencies:
+  - aiohttp
   - bokeh
   - cmcrameri
   - dask
@@ -27,6 +28,7 @@ dependencies:
   - pyproj
   - pystac-client
   - python=3.11
+  - requests
   - rioxarray
   - scikit-image
   - scipy
