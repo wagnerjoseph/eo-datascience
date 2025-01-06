@@ -7,9 +7,9 @@ REQ := $(basename $(notdir $(YML)))
 NB != find chapters -name "*.quarto_ipynb" -o  -name "*.ipynb" -not -path \
 	"*/.jupyter_cache/*"
 
-CONDA_ACTIVATE := source $$(conda info --base)/etc/profile.d/conda.sh ; \
-	conda activate ; conda activate
 CONDA_ENV != conda info --base
+CONDA_ACTIVATE := source $(CONDA_ENV)/etc/profile.d/conda.sh ; \
+	conda activate ; conda activate
 CONDA_ENV_DIR := $(foreach i,$(REQ),$(CONDA_ENV)/envs/$(i))
 KERNEL_DIR != $(CONDA_ACTIVATE) eo-datascience; jupyter --data-dir
 KERNEL_DIR := $(foreach i,$(REQ),$(KERNEL_DIR)/kernels/$(i))
