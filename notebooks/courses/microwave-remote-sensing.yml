@@ -11,6 +11,7 @@ dependencies:
   - folium
   - graphviz
   - holoviews
+  - huggingface_hub
   - hvplot
   - intake
   - intake-xarray
