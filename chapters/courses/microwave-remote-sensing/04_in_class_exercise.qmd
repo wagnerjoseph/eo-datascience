@@ -102,7 +102,7 @@ map
 
 On the map we have drawn rectangles of the area covered by the images and of our selected study area. To prevent loading too much data we will now only load the data as defined by the blue rectangle on the `folium` map.
 
-The Sentinel-1 data is stored in the `shared` folder of the JupyterHub as separate two-dimensional GeoTIFF files with a certain timestamp. The following `s1_preprocess` function allows to load all files in one go as a spatiotemporal datacube. Basically, the preprocessing function helps reading the timestamp from the file and adds this as a new dimension to the array. The latter allows a concatenation procedure where all files are joined along the new time dimension. In addition by providing `area_of_interest.bounds` to the parameter `bbox` we will only load the data of the previously defined area of interest.
+The Sentinel-1 data is now stored on disk as separate two-dimensional GeoTIFF files with a certain timestamp. The following `s1_preprocess` function allows to load all files in one go as a spatiotemporal datacube. Basically, the preprocessing function helps reading the timestamp from the file and adds this as a new dimension to the array. The latter allows a concatenation procedure where all files are joined along the new time dimension. In addition by providing `area_of_interest.bounds` to the parameter `bbox` we will only load the data of the previously defined area of interest.
 
 ```{python}
 def s1_preprocess(x, bbox, scale):

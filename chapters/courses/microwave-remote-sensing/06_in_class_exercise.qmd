@@ -1,0 +1,222 @@
+---
+title: Dielectric Properties of Natural Media
+jupyter: microwave-remote-sensing
+---
+
+
+In this notebook, we will investigate the varying backscatter values associated with different land surfaces like water bodies, forests, grasslands and urban areas. We will use backscatter data from the Sentinel-1 satellite and we will utilize the CORINE Land Cover dataset to classify and extrapolate these surfaces, enabling us to analyze how different land cover types influence backscatter responses.
+
+
+```{python}
+import numpy as np
+import xarray as xr
+import rioxarray  # noqa
+
+import fsspec
+import intake
+import json
+
+from functools import partial
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib.colors import ListedColormap, BoundaryNorm
+import holoviews as hv
+from holoviews.streams import RangeXY
+```
+
+## Load Sentinel-1 Data
+
+For our analysis we are using sigma naught backscatering data from Sentinel-1. The images we are analyzing cover the region south of Vienna and west of Neusiedlersee Lake. We load the data and and apply again a preprocessing function. Here we extract the scaling factor and the date the image was taken from the metadata. We will focus our attention to a smaller area containing a part of the Neusiedlersee Lake and its surrounding land. The obtained`xarray` dataset and is then converted to an array, because we only have one variable, the VV backscatter values.
+
+```{python}
+url = "https://huggingface.co/datasets/martinschobben/microwave-remote-sensing/resolve/main/microwave-remote-sensing.yml"
+cat = intake.open_catalog(url)
+sig0_da = cat.neusiedler.read().sig0.compute()
+```
+
+Let's have a look at the data by plotting the first timeslice.
+
+```{python}
+sig0_da.isel(time=0).plot(robust=True, cmap="Greys_r").axes.set_aspect("equal")
+```
+
+## Load CORINE Landcover Data
+
+We will load the CORINE Land Cover, which is a pan-European land cover and land use inventory with 44 thematic classes. The resolution of this classification is 100 by 100m and the file was created in 2018
+([CORINE Land Cover](https://land.copernicus.eu/en/products/corine-land-cover)).
+
+```{python}
+cor_da = cat.corine.read().land_cover.compute()
+```
+
+### Colormapping and Encoding
+
+For the different land cover types we use the official color encoding which can be found in [CORINE Land Cover](https://collections.sentinel-hub.com/corine-land-cover/readme.html).
+
+```{python}
+# Load encoding
+url = "https://raw.githubusercontent.com/TUW-GEO/microwave-remote-sensing/refs/heads/main/assets/06_color_mapping.json"
+fs = fsspec.filesystem('http')
+with fs.open(url, "r") as f:
+    color_mapping_data = json.load(f)
+
+# Get mapping
+color_mapping = {item["value"]: item for item in
+                 color_mapping_data["land_cover"]}
+
+# Create cmap and norm for plotting
+colors = [info["color"] for info in color_mapping.values()]
+categories = [info["value"] for info in color_mapping.values()]
+cmap = ListedColormap(colors)
+norm = BoundaryNorm(categories + [max(categories) + 1], len(categories))
+```
+
+Now we can plot the CORINE Land Cover dataset.
+
+```{python}
+# Get landcover codes present in the image
+present_landcover_codes = np.unique(cor_da.values[~np.isnan(cor_da.values)].
+                                    astype(int))
+
+# Get colors + text for legend
+handles = [
+    mpatches.Patch(
+        color=info["color"], label=(f'{info["value"]} - ' + (info["label"]))
+        )
+    for info in color_mapping.values()
+    if info["value"] in present_landcover_codes
+]
+
+# Create the plot
+cor_da.plot(figsize=(10, 10), cmap=cmap, norm=norm, add_colorbar=False).\
+    axes.set_aspect("equal")
+
+plt.legend(
+    handles=handles,
+    bbox_to_anchor=(1.01, 1),
+    loc="upper left",
+    borderaxespad=0,
+    fontsize=7,
+)
+plt.title("CORINE Land Cover (EPSG:27704)")
+```
+
+Now we are ready to merge the backscatter data (`sig0_da`) with the land cover dataset (`cor_da`) to have one dataset combining all data.
+
+```{python}
+var_ds = xr.merge([sig0_da, cor_da]).drop_vars("band").compute()
+var_ds
+```
+
+## Backscatter Variability
+
+With this combined dataset we can study backscatter variability in relation to natural media. For example we can look at the backscatter variability for water by clipping the dataset to only contain the land cover class water, like so:
+
+```{python}
+# 41 = encoded value for water bodies
+waterbodies_mask = var_ds.land_cover == 41
+waterbodies_mask.plot().axes.set_aspect("equal")
+```
+
+This gives use backscatter values over water only.
+
+```{python}
+waterbodies_sig0 = var_ds.sig0.isel(time=0).where(waterbodies_mask)
+waterbodies_sig0.plot(robust=True, cmap="Greys_r").axes.set_aspect("equal")
+```
+
+To get an idea of the variability we can create a histogram. Radar backscatter from water bodies fluctuates with surface roughness, which changes with wind conditions, creating spatial and temporal variations in signal intensity.
+
+```{python}
+waterbodies_sig0.plot.hist(bins=50, edgecolor="black")
+```
+
+## Variability over Time
+
+Next we will look at the changes in variability in backscatter values over time for each of the CORINE Land Cover types. We do this by creating the following interactive plot. We can spot that backscatter in agricultural fields varies due to seasonal cycles like planting, growing, and harvesting, each of which changes vegetation structure. Changes in backscatter are strongly related to soil moisture content from irrigation or rainfall. Ultimately, phenological stages of crops and canopy moisture dynamics can affect the backscatter signal.
+
+```{python}
+hv.extension("bokeh")
+
+robust_min = var_ds.sig0.quantile(0.02).item()
+robust_max = var_ds.sig0.quantile(0.98).item()
+
+bin_edges = [
+    i + j * 0.5
+    for i in range(int(robust_min) - 2, int(robust_max) + 2)
+    for j in range(2)
+]
+
+land_cover = {"\xa0\xa0\xa0 Complete Land Cover": 1}
+land_cover.update(
+    {
+        f"{int(value): 02} {color_mapping[value]['label']}": int(value)
+        for value in present_landcover_codes
+    }
+)
+time = var_ds.sig0["time"].values
+
+rangexy = RangeXY()
+
+
+def load_image(time, land_cover, x_range, y_range):
+    """
+    Callback Function Landcover.
+
+    Parameters
+    ----------
+    time: panda.datatime
+        time slice
+    landcover: int
+        land cover type
+    x_range: array_like
+        longitude range
+    y_range: array_like
+        latitude range
+
+    Returns
+    -------
+    holoviews.Image
+    """
+
+    if land_cover == "\xa0\xa0\xa0 Complete Land Cover":
+        sig0_selected_ds = var_ds.sig0.sel(time=time)
+
+    else:
+        land_cover_value = int(land_cover.split()[0])
+        mask_ds = var_ds.land_cover == land_cover_value
+        sig0_selected_ds = var_ds.sig0.sel(time=time).where(mask_ds)
+
+    hv_ds = hv.Dataset(sig0_selected_ds)
+    img = hv_ds.to(hv.Image, ["x", "y"])
+
+    if x_range and y_range:
+        img = img.select(x=x_range, y=y_range)
+
+    return hv.Image(img)
+
+
+dmap = (
+    hv.DynamicMap(load_image, kdims=["Time", "Landcover"], streams=[rangexy])
+    .redim.values(Time=time, Landcover=land_cover)
+    .hist(normed=True, bins=bin_edges)
+)
+
+image_opts = hv.opts.Image(
+    cmap="Greys_r",
+    colorbar=True,
+    tools=["hover"],
+    clim=(robust_min, robust_max),
+    aspect="equal",
+    framewise=False,
+    frame_height=500,
+    frame_width=500,
+)
+
+hist_opts = hv.opts.Histogram(width=350, height=555)
+
+dmap.opts(image_opts, hist_opts)
+```
+
