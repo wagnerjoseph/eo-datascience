@@ -43,6 +43,12 @@ jobs:
           cache: 'pip'
       - run: pip install jupyter jupyter-cache
 
+      - name: Get Jupyter Cache Dir
+        id: jupyter-cache
+        shell: bash
+        run: |
+          echo "dir=$(cd chapters && find ~+ -name ".jupyter_cache")" >> $GITHUB_OUTPUT
+
       - name: Cache Environment
         uses: actions/cache@v4
         with:
@@ -50,7 +56,7 @@ jobs:
             ~/.local/share/jupyter/kernels
             ~/.cache/pip
             /usr/share/miniconda/envs
-            /tmp/fsspec_cache
+            ${{ steps.jupyter-cache.outputs.dir }}
           key: ${{ runner.os }}-env-${{ hashFiles('./environment.yml', './notebooks/**/*.yml') }}
           restore-keys: ${{ runner.os }}-env-
 
