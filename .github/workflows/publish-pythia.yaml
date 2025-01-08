@@ -36,14 +36,23 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Restore Cache Conda Environments
-        uses: actions/cache/restore@v4
+      - name: Install Python and Dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install jupyter jupyter-cache
+
+      - name: Cache Environment
+        uses: actions/cache@v4
         with:
           path: |
             ~/.local/share/jupyter/kernels
             ~/.cache/pip
             /usr/share/miniconda/envs
-          key: ${{ runner.os }}-conda-${{ hashFiles('notebooks/*.yml') }}
+            /tmp/fsspec_cache
+          key: ${{ runner.os }}-env-${{ hashFiles('./environment.yml', './notebooks/**/*.yml') }}
+          restore-keys: ${{ runner.os }}-env-
 
       - name: Render and Publish
         id: setup-python
@@ -53,30 +62,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Save Cache Conda Environments
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            ~/.local/share/jupyter/kernels
-            ~/.cache/pip
-            /usr/share/miniconda/envs
-          key: ${{ runner.os }}-conda-${{ hashFiles('notebooks/*.yml') }}
-
-      # - name: Cache Binder Build on mybinder.org
-      #   uses: jupyterhub/repo2docker-action@master
-      #   with:
-      #     NO_PUSH: true
-      #     MYBINDERORG_TAG: ${{ github.event.ref }} 
-      #     REPO2DOCKER_EXTRA_ARGS: --subdir notebooks
-
       - name: Commit Files Pythia Book
         if: github.ref == 'refs/heads/main'
         run: |
-          pip install .
+          python -m pip install .
           render_sfinx_toc ./pythia
           clean_nb ./chapters  ./pythia/notebooks
           cp ./Makefile ./pythia/
           cp ./chapters/references.bib ./pythia/notebooks/
+          cp $(find notebooks -name "*.yml") ./pythia/notebooks/
           cd ./pythia
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
