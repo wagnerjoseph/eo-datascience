@@ -25,7 +25,7 @@ eodc_catalog = pystac_client.Client.open("https://stac.eodc.eu/api/v1")
 eodc_catalog
 ```
 
-The URL https://stac.eodc.eu/api/v1, served over Hypertext Transfer Protocol (HTTP), is a STAC-compliant API endpoint (specific URL address where an API service is available) that leads to the EODC Catalogue. Besides EODC's, other catalogues can be found on [STAC Index](https://stacindex.org/catalogs), such as United States Geological Survey (USGS) Landsat imagery, Sentinel Hub, Copernicus Data Space Ecosystem, and so on. Briefly spoken, STAC can be used to search, discover, and access metadata of these datasets with the same code. The EODC Catalogue can be accessed on the web via this [link](https://services.eodc.eu/browser/#/?.language=en) as well.
+The URL `https://stac.eodc.eu/api/v1`, served over Hypertext Transfer Protocol (HTTP), is a STAC-compliant API endpoint (specific URL address where an API service is available) that leads to the EODC Catalogue. Besides EODC's, other catalogues can be found on [STAC Index](https://stacindex.org/catalogs), such as United States Geological Survey (USGS) Landsat imagery, Sentinel Hub, Copernicus Data Space Ecosystem, and so on. Briefly spoken, STAC can be used to search, discover, and access metadata of these datasets with the same code. The EODC Catalogue can be accessed on the web via this [link](https://services.eodc.eu/browser/#/?.language=en) as well.
 
 Each STAC catalog, composed by different providers, has many collections. To get all collections of a catalog, we can print all of them and their ids, which are used to fetch them from the catalog.
 

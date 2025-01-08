@@ -36,6 +36,7 @@ We load the data again with the help of `intake`
 url = "https://huggingface.co/datasets/martinschobben/microwave-remote-sensing/resolve/main/microwave-remote-sensing.yml"
 cat = intake.open_catalog(url)
 fused_ds = cat.fused.read()
+fused_ds
 ```
 
 The loaded data contains the Leaf Area Index (LAI), which is used as an estimate of foliage cover of forest canopies. So high LAI is interpreted as forested area, whereas low values account for less vegetated areas (shrubs, grass-land, and crops).

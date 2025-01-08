@@ -27,6 +27,8 @@ import matplotlib.patches as mpatches
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import holoviews as hv
 from holoviews.streams import RangeXY
+
+hv.extension("bokeh")
 ```
 
 ## Load Sentinel-1 Data
@@ -139,8 +141,6 @@ waterbodies_sig0.plot.hist(bins=50, edgecolor="black")
 Next we will look at the changes in variability in backscatter values over time for each of the CORINE Land Cover types. We do this by creating the following interactive plot. We can spot that backscatter in agricultural fields varies due to seasonal cycles like planting, growing, and harvesting, each of which changes vegetation structure. Changes in backscatter are strongly related to soil moisture content from irrigation or rainfall. Ultimately, phenological stages of crops and canopy moisture dynamics can affect the backscatter signal.
 
 ```{python}
-hv.extension("bokeh")
-
 robust_min = var_ds.sig0.quantile(0.02).item()
 robust_max = var_ds.sig0.quantile(0.98).item()
 
