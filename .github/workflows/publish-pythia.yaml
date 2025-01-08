@@ -43,7 +43,7 @@ jobs:
             ~/.local/share/jupyter/kernels
             ~/.cache/pip
             /usr/share/miniconda/envs
-          key: ${{ runner.os }}-conda-${{ hashFiles('notebooks/*.yml') }}
+          key: ${{ runner.os }}-conda-${{ hashFiles('./environment.yml', './notebooks/**/*.yml') }}
 
       - name: Render and Publish
         id: setup-python
@@ -60,23 +60,17 @@ jobs:
             ~/.local/share/jupyter/kernels
             ~/.cache/pip
             /usr/share/miniconda/envs
-          key: ${{ runner.os }}-conda-${{ hashFiles('notebooks/*.yml') }}
-
-      # - name: Cache Binder Build on mybinder.org
-      #   uses: jupyterhub/repo2docker-action@master
-      #   with:
-      #     NO_PUSH: true
-      #     MYBINDERORG_TAG: ${{ github.event.ref }} 
-      #     REPO2DOCKER_EXTRA_ARGS: --subdir notebooks
+          key: ${{ runner.os }}-conda-${{ hashFiles('./environment.yml', './notebooks/**/*.yml') }}
 
       - name: Commit Files Pythia Book
         if: github.ref == 'refs/heads/main'
         run: |
-          pip install .
+          python -m pip install .
           render_sfinx_toc ./pythia
           clean_nb ./chapters  ./pythia/notebooks
           cp ./Makefile ./pythia/
           cp ./chapters/references.bib ./pythia/notebooks/
+          cp $(find notebooks -name "*.yml") ./pythia/notebooks/
           cd ./pythia
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
