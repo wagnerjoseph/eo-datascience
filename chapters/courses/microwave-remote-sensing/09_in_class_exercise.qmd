@@ -1,0 +1,430 @@
+---
+title: Phase Unwrapping
+jupyter:
+  kernelspec:
+    name: "microwave-remote-sensing"
+    language: "python"
+    display_name: "microwave-remote-sensing"
+---
+
+
+The goal of this notebook is to read an interferogram image (i.e., 2-D array of phase values) and unwrap it. Phase unwrapping is a critical process in interferometry, which involves recovering unambiguous phase data from the interferogram.
+
+A SAR interferogram represents the phase difference between two radar acquisitions (i.e., two SLC images). The phase difference is usually wrapped within a range of 0 to 2π, because the phase is inherently cyclical. When the true phase difference exceeds 2π, it gets "wrapped" into this range, creating a discontinuous phase signal. Phase unwrapping refers to the process of reconstructing the continuous phase field from the wrapped phase data.
+
+Unwrapping an interferogram is essential for extracting correct information contained in the phase such as surface topography and earth surface deformations.
+
+There are many approaches that tried to solve the unwrapping problem, tackling challenging scenarios involving noise or large phase discontinuities. Here we present the Network-flow Algorithm for phase unwrapping (C. W. Chen and H. A. Zebker, 2000), which is implemented in the SNAPHU package.
+
+## Loading Data
+The data is stored on the Jupyterhub server, so we need to load it using their respective paths.
+In this notebook we will use the resulting wrapped interferogram from `Notebook 8`, but we need to process it in the radar geometry in order to unwrap it (while in `Notebook 8` we end the whole process by performing the geocoding, just for better visualization purposes).
+
+
+```{python}
+# Imports
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import xarray as xr
+from pathlib import Path
+import cmcrameri as cmc  # noqa: F401
+import snaphu
+import seaborn as sns
+import intake
+from IPython.display import clear_output
+```
+
+```{python}
+url = "https://huggingface.co/datasets/martinschobben/microwave-remote-sensing/resolve/main/microwave-remote-sensing.yml"
+cat = intake.open_catalog(url)
+ds = cat.complex.read().compute()
+ds["cmplx"] = ds["real"] + ds["imag"] * 1j
+```
+
+```{python}
+# Set cyclic and linear colormaps
+cmap_cyc = sns.color_palette("hls", as_cmap=True)  # "cmc.romaO"
+cmap_lin = "cmc.roma_r"
+cmap_disp = "cmc.vik"
+
+# Create a mask for the areas which have no data
+mask = ds.phase.where(ds.phase == 0, True, False).astype(bool)
+```
+
+Let's start by displaying the interferogram that needs to be unwrapped. Recall that due to the Slant Range geometry and the satellite acquisition pass (ascending, in our case), the image appears north/south flipped (with respect to the geocoded image)!
+
+```{python}
+# Plot Phase Interferogram Image
+fig, axs = plt.subplots(figsize=(6, 6))
+
+(
+    ds.phase.where(mask)
+    .plot.imshow(cmap=cmap_cyc, zorder=1)
+    .axes.set_title("Phase Interferogram Image (Wrapped)")
+)
+plt.show()
+```
+
+## Phase Unwrapping
+
+As we will be doing the unwrapping multiple times in this notebook let's create a function that does the unwrapping for us on `xarray DataArray` objects.
+The actual core function where the unwrapping is happening is `snaphu.unwrap_phase` from the `snaphu` package. This function needs a 2D numpy array as input, where each pixel value is a complex number.
+Therefore we have to convert the `xarray DataArray` to a 2D numpy array with complex values. We do that by combining the phase and intensity bands to a complex array.
+The actual unwrapping is essentially an addition of the phase values, such that the values are continuous and not between $-\pi$ and $\pi$.
+
+![](https://forum.step.esa.int/uploads/default/original/3X/5/d/5d9d18e2a3121a4bb80cb93a8f62aed742e35fc2.png)
+
+*Figure 1: Illustration of how the unwrapping of the phase works. (Source: ESA)*.
+
+```{python}
+def unwrap_array(
+    data: xr.DataArray,
+    complex_var: str = "cmplx",
+    ouput_var: str = "unwrapped",
+    mask: xr.DataArray = True,
+    coherence: xr.DataArray = None,
+    mask_nodata_value: int = 0,
+    coh_low_threshold: float = None,
+    coh_high_threshold: float = None,
+    nlooks=1.0,
+    cost="smooth",
+    init="mcf",
+    **kwargs,
+) -> xr.DataArray:
+    """
+    Unwraps the phase data using the snaphu algorithm.
+
+    Parameters
+    ----------
+
+    data: xarray DataArray with complex numbers
+    complex_var: Name of the variable with the complex numbers
+    ouput_var: Name of the variable with the unwrapped phase
+    mask: xarray DataArray with mask values
+    coherence: xarray DataArray with coherence values (optional)
+    mask_nodata_value: Value of the no data pixels in the mask
+    coh_low_threshold: Lower threshold for the coherence values
+    coh_high_threshold: Higher threshold for the coherence values
+
+    Returns
+    ----------
+    xarray DataArray with the unwrapped phase
+    """
+    # Get the complex data
+    data_arr = data[complex_var]
+
+    # Create a mask for areas with no data
+    if mask is True:
+        mask = (data_arr.real != mask_nodata_value).astype(bool)
+
+    # Apply coherence thresholds if provided
+    if coherence is not None:
+        if coh_low_threshold is not None:
+            coh_mask = (coherence >= coh_low_threshold).astype(bool)
+            mask = mask & coh_mask
+        if coh_high_threshold is not None:
+            coh_mask = (coherence <= coh_high_threshold).astype(bool)
+            mask = mask & coh_mask
+
+    # Apply the mask to the data
+    data_arr = data_arr.where(mask)
+
+    if coherence is None:
+        coherence = np.ones_like(data_arr.real)
+
+    # Unwrap the phase (already in complex form)
+    unw, _ = snaphu.unwrap(
+        data_arr,
+        coherence,
+        nlooks=nlooks,
+        cost=cost,
+        init=init,
+        mask=mask,
+        **kwargs,
+    )
+
+    # Clear the output to avoid printing the snaphu output
+    clear_output()
+
+    # Build xarray DataArray with the unwrapped phase
+    # unw_da = xr.DataArray(unw, coords=data.coords, dims=data.dims)
+    # data = data.to_dataset()
+    data[ouput_var] = (("y", "x"), unw)
+
+    # Mask the unwrapped phase
+    # unw_da = unw_da.where(mask)
+    data[ouput_var] = data[ouput_var].where(mask)
+    return data
+```
+
+### Unwrapping on a Subset
+
+As the original image is too large to unwrap in a reasonable time, we will unwrap a subset of the image. In this case, we will unwrap an area of 500x500 pixels.
+
+```{python}
+# Select a subset of the data
+dx, dy = 500, 500
+x0, y0 = 2800, 1700
+
+
+def subsetting(ds, x0: int = 0, y0: int = 0, dx: int = 500, dy: int = 500):
+    return ds.isel(x=slice(x0, x0 + dx), y=slice(y0, y0 + dy))
+
+
+# Subsetting the data arrays
+subset = subsetting(ds.where(mask), x0, y0, dx, dy)
+
+# Unwrap the subset
+subset = unwrap_array(subset, complex_var="cmplx", ouput_var="unwrapped")
+```
+
+Now let's compare the wrapped and unwrapped phase images.
+
+```{python}
+fig, axs = plt.subplots(1, 3, figsize=(14, 4))
+
+# Wrapped Phase
+
+(
+    subset.phase.plot.imshow(cmap=cmap_cyc, ax=axs[0]).axes.set_title(
+        "Wrapped Phase of the Subset"
+    )
+)
+
+# Unwrapped Phase
+(
+    subset.unwrapped.plot.imshow(cmap=cmap_cyc, ax=axs[1], vmin=-80, vmax=80).axes.set_title(
+        "Unwrapped Phase of the Subset"
+    )
+)
+
+# Subset inside the complete image
+(
+    ds.phase.where(mask)
+    .plot.imshow(cmap=cmap_cyc, zorder=1, ax=axs[2])
+    .axes.set_title("Complete Wrapped Phase Image")
+)
+
+x_start = ds.phase.coords["x"][x0].item()
+y_start = ds.phase.coords["y"][y0].item()
+x_end = ds.phase.coords["x"][x0 + dx].item()
+y_end = ds.phase.coords["y"][y0 + dy].item()
+
+rect = patches.Rectangle(
+    (x_start, y_start),
+    x_end - x_start,
+    y_end - y_start,
+    linewidth=1,
+    edgecolor="r",
+    facecolor="red",
+    alpha=0.5,
+    label="Subset",
+)
+
+# Add the rectangle to the plot
+axs[2].add_patch(rect)
+axs[2].legend()
+plt.tight_layout()
+```
+
+### Unwrapping with coherence mask
+Additionally, can we try to calculate the unwrapped image, where we are excluding pixels, where the coherence values are lower than a certain threshold. This is done by masking the coherence image with the threshold value and then unwrapping the phase image with the masked coherence image.
+
+```{python}
+threshold1 = 0.3
+subset = unwrap_array(
+    subset,
+    coherence=subset.coh,
+    coh_low_threshold=threshold1,
+    complex_var="cmplx",
+    ouput_var="unwrapped_coh",
+)
+```
+
+Let's compare the unwrapped image with and without the coherence mask.
+
+```{python}
+fig, axs = plt.subplots(1, 2, figsize=(13, 5))
+(
+    subset.unwrapped_coh.plot.imshow(cmap=cmap_cyc, ax=axs[0], vmin=-80, vmax=80).axes.set_title(
+        f"Unwrapped Phase with Coherence Threshold {threshold1}"
+    )
+)
+
+(
+    subset.unwrapped.plot.imshow(cmap=cmap_cyc, ax=axs[1], vmin=-80, vmax=80).axes.set_title(
+        "Unwrapped Phase without Coherence Threshold"
+    )
+)
+
+plt.show()
+```
+
+Let's see if another threshold value for the coherence mask gives better results.
+
+```{python}
+threshold2 = 0.5
+subset = unwrap_array(
+    subset,
+    coherence=subset.coh,
+    coh_low_threshold=threshold2,
+    complex_var="cmplx",
+    ouput_var="unwrapped_coh2",
+)
+
+fig, axs = plt.subplots(1, 2, figsize=(13, 5))
+(
+    subset.unwrapped_coh2.plot.imshow(cmap=cmap_cyc, ax=axs[0], vmin=-80, vmax=80).axes.set_title(
+        "Coherence Threshold 0.5"
+    )
+)
+
+(
+    subset.unwrapped_coh.plot.imshow(cmap=cmap_cyc, ax=axs[1], vmin=-80, vmax=80).axes.set_title(
+        "Coherence Threshold 0.3"
+    )
+)
+plt.show()
+```
+
+A higher coherence threshold means that only pixels with a coherence value greater than 0.5 will be used for phase unwrapping. This would result in an unwrapping process that is likely more stable, with reduced noise (invalid phase information in the proximity of the earthquake faults is discarded). However, an excessive coherence threshold might have significant gaps or missing information, especially in areas where motion or surface changes have occurred.
+The choice of a coherence threshold depends on the balance you want to strike between the accuracy and coverage of the output unwrapped image.
+
+Keep in mind that in case of large displacements, such as the Ridgecrest earthquake, phase unwrapping can be problematic and lead to poor results: when the displacement is large, the phase difference becomes wrapped multiple times, leading to phase aliasing. In this case, the phase values become ambiguous, we cannot distinguish between multiple phase wraps, thus leading to incorrect results.
+
+## Applying an equation for the displacement map
+
+From the unwrapped phase image (we will use the phase masked with a coherence threshold of 0.3) we can calculate the displacement map using the following equation:
+
+$
+d = - \frac{\lambda}{4 \cdot \pi} \cdot \Delta \phi_d
+$
+
+where:
+- $\lambda = 0.056$ for Sentinel-1
+- $\Delta \phi_d$ is the unwrapped image
+
+This operation can be very useful for monitoring ground deformation.
+
+```{python}
+def displacement(unw, lambda_val: float = 0.056) -> xr.DataArray:
+    """
+    Calculates the displacement from the unwrapped phase
+
+    Parameters
+    ----------
+
+    unw: xarray DataArray with the unwrapped phase
+    unw: xr.DataArray
+    lambda_val: Wavelength of the radar signal
+    lambda_val: float
+
+    Returns
+    -------
+    xarray DataArray with the displacement
+    """
+    disp = unw * -lambda_val / (4 * np.pi)
+    return disp
+
+
+# Calculate the displacement
+disp_subset = displacement(subset.unwrapped_coh)
+```
+
+```{python}
+# Plot the displacement map
+(
+    disp_subset.plot.imshow(
+        cmap=cmap_disp, cbar_kwargs={"label": "Meters [m]"}
+    ).axes.set_title("Displacement Map of the Subset")
+)
+plt.show()
+```
+
+## Coarsen approach
+
+As the whole data is too large and the processing time already exceeds 20 minutes when using an image with 4000x4000 pixels, we can coarsen the image so that we can unwrap and compute the displacement for the whole scene.
+
+```{python}
+kernel_size = 3
+lowres = ds.coarsen(x=kernel_size, y=kernel_size, boundary="trim").median()
+```
+
+```{python}
+lowres = unwrap_array(
+    lowres,
+    ntiles=(20, 30),
+    tile_overlap=10,
+    coherence=lowres.coh,
+    coh_low_threshold=0.3,
+    complex_var="cmplx",
+    ouput_var="unwrapped",
+)
+```
+
+We can now plot the unwrapped image of the low resolution image.
+
+```{python}
+# Plot the unwrapped phase
+(
+    lowres.unwrapped.plot.imshow(cmap=cmap_cyc).axes.set_title(
+        "Unwrapped Phase entire scene (coarsened)"
+    )
+)
+plt.show()
+```
+
+We can also now calculate the displacement map and compare them.
+
+```{python}
+lowres_disp = displacement(lowres.unwrapped)
+
+# Plot the displacement map
+(
+    lowres_disp.plot.imshow(
+        cmap=cmap_disp, cbar_kwargs={"label": "Meters [m]"}
+    ).axes.set_title("Displacement Map entire scene (coarse resolution)")
+)
+plt.show()
+```
+
+Plot a summary of the previous plots:
+
+```{python}
+# Plot summary of previous plots
+fig, axs = plt.subplots(2, 2, figsize=(12, 10))
+ax = axs.ravel()
+
+(
+    subset.unwrapped_coh.plot.imshow(cmap=cmap_cyc, ax=ax[0], vmin=-80, vmax=80).axes.set_title(
+        "Unwrapped Phase of the subset with Coherence Threshold 0.3"
+    )
+)
+
+(
+    disp_subset.plot.imshow(
+        cmap=cmap_disp, ax=ax[1], cbar_kwargs={"label": "Meters [m]"}
+    ).axes.set_title("Displacement Map of the Subset")
+)
+
+(
+    lowres.unwrapped.plot.imshow(cmap=cmap_cyc, ax=ax[2]).axes.set_title(
+        "Unwrapped Phase of the entire scene with Coherence Threshold 0.3 (coarsened)"
+    )
+)
+
+(
+    lowres_disp.plot.imshow(
+        cmap=cmap_disp, ax=ax[3], cbar_kwargs={"label": "Meters [m]"}
+    ).axes.set_title("Displacement Map entire scene (coarse resolution)")
+)
+
+plt.tight_layout()
+```
+
+In the following animation, we can capture the 3D displacement caused by the Ridgecrest quake by observing the after and before elevation model.
+
+![](../../images/ridgecrest.gif)
+*Credits: NASA*
+

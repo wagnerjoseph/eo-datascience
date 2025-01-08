@@ -7,9 +7,9 @@ REQ := $(basename $(notdir $(YML)))
 NB != find chapters -name "*.quarto_ipynb" -o  -name "*.ipynb" -not -path \
 	"*/.jupyter_cache/*"
 
-CONDA_ACTIVATE := source $$(conda info --base)/etc/profile.d/conda.sh ; \
-	conda activate ; conda activate
 CONDA_ENV != conda info --base
+CONDA_ACTIVATE := source $(CONDA_ENV)/etc/profile.d/conda.sh ; \
+	conda activate ; conda activate
 CONDA_ENV_DIR := $(foreach i,$(REQ),$(CONDA_ENV)/envs/$(i))
 KERNEL_DIR != $(CONDA_ACTIVATE) eo-datascience; jupyter --data-dir
 KERNEL_DIR := $(foreach i,$(REQ),$(KERNEL_DIR)/kernels/$(i))
@@ -51,16 +51,21 @@ post-render:
 	$(foreach f, $(NB), \
 		mv $(f) "$(subst chapters,notebooks,$(subst .quarto_ipynb,.ipynb,$(f)))"; )
 	cp ./Makefile ./notebooks/
+	cp -r ./chapters/images ./notebooks
 
 preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	$(CONDA_ACTIVATE) eo-datascience
 	- mkdir -p _preview/notebooks
 	python -m pip install -e .
+	cp ./chapters/references.bib ./_preview/notebooks/
+	cp -r ./chapters/images ./_preview/notebooks
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/README.md -nc -P ./_preview
+	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/_config.yml -nc -P ./_preview
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/notebooks/how-to-cite.md -nc -P ./_preview/notebooks
 	render_sfinx_toc ./_preview
 	clean_nb ./notebooks ./_preview/notebooks
-	jupyter-book build ./_preview ; jupyter-book build ./_preview
+	jupyter-book build ./_preview
+	jupyter-book build ./_preview
 
 clean:
 	rm --force --recursive .ipynb_checkpoints/ **/.ipynb_checkpoints/ _book/ \

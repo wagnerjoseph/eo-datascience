@@ -9,9 +9,9 @@ project:
 book:
   title: "Earth Observation Datascience"
   author:
+    - Wolfgang Wagner
     - Nikolas Pikall
     - Martin Schobben
-    - Wolfgang Wagner
   date: "`python -c \"import datetime; print(datetime.datetime.now())\"`"
   chapters:
     - index.qmd
@@ -19,6 +19,13 @@ book:
       chapters:
         - chapters/courses/microwave-remote-sensing/01_in_class_exercise.qmd
         - chapters/courses/microwave-remote-sensing/02_in_class_exercise.qmd
+        - chapters/courses/microwave-remote-sensing/03_in_class_exercise.qmd
+        - chapters/courses/microwave-remote-sensing/04_in_class_exercise.qmd
+        - chapters/courses/microwave-remote-sensing/05_in_class_exercise.qmd
+        - chapters/courses/microwave-remote-sensing/06_in_class_exercise.qmd
+        - chapters/courses/microwave-remote-sensing/07_in_class_exercise.qmd
+        - chapters/courses/microwave-remote-sensing/08_in_class_exercise.qmd
+        - chapters/courses/microwave-remote-sensing/09_in_class_exercise.qmd
   appendices:
     - part: "Templates"
       chapters:
@@ -28,9 +35,9 @@ book:
         - chapters/tutorials/floodmapping.qmd
     - chapters/references.qmd
   navbar:
-    logo: assets/images/tuw-geo_eodc_logo_horizontal.png
+    logo: chapters/images/logos/tuw-geo_eodc_logo_horizontal.png
   sidebar:
-    logo: assets/images/tuw-geo_eodc_logo_vertical.png
+    logo: chapters/images/logos/tuw-geo_eodc_logo_vertical.png
 bibliography: chapters/references.bib
 
 format:
