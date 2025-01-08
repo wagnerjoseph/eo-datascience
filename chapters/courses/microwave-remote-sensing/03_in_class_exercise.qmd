@@ -54,7 +54,7 @@ gtc_dc.hvplot.image(x="x", y="y", robust=True, data_aspect=1, cmap="Greys_r",
 
 The geometrically terrain corrected values from the `gtc_dc` object (Figure 1) can be approximated to a certain extent, as we have sufficiently detailed information of topography in this area. This corrects for at least one typically occurring distortion in mountainous regions: "foreshortening".
 
-![](../assets/images/side_looking_image_distortions.png)
+![](../../images/side_looking_image_distortions.png)
 
 *Figure 3: Side Looking radar distortions (script Chapter 4).*
 

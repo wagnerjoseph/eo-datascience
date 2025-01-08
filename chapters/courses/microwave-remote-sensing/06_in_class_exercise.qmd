@@ -1,6 +1,10 @@
 ---
 title: Dielectric Properties of Natural Media
-jupyter: microwave-remote-sensing
+jupyter:
+  kernelspec:
+    name: "microwave-remote-sensing"
+    language: "python"
+    display_name: "microwave-remote-sensing"
 ---
 
 
@@ -12,7 +16,6 @@ import numpy as np
 import xarray as xr
 import rioxarray  # noqa
 
-import fsspec
 import intake
 import json
 
@@ -57,9 +60,7 @@ For the different land cover types we use the official color encoding which can 
 
 ```{python}
 # Load encoding
-url = "https://raw.githubusercontent.com/TUW-GEO/microwave-remote-sensing/refs/heads/main/assets/06_color_mapping.json"
-fs = fsspec.filesystem('http')
-with fs.open(url, "r") as f:
+with open("../../images/cmaps/06_color_mapping.json", "r") as f:
     color_mapping_data = json.load(f)
 
 # Get mapping
@@ -106,7 +107,7 @@ plt.title("CORINE Land Cover (EPSG:27704)")
 Now we are ready to merge the backscatter data (`sig0_da`) with the land cover dataset (`cor_da`) to have one dataset combining all data.
 
 ```{python}
-var_ds = xr.merge([sig0_da, cor_da]).drop_vars("band").compute()
+var_ds = xr.merge([sig0_da, cor_da]).drop_vars("band")
 var_ds
 ```
 

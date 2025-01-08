@@ -32,9 +32,9 @@ book:
         - chapters/tutorials/floodmapping.qmd
     - chapters/references.qmd
   navbar:
-    logo: assets/images/tuw-geo_eodc_logo_horizontal.png
+    logo: chapters/images/logos/tuw-geo_eodc_logo_horizontal.png
   sidebar:
-    logo: assets/images/tuw-geo_eodc_logo_vertical.png
+    logo: chapters/images/logos/tuw-geo_eodc_logo_vertical.png
 bibliography: chapters/references.bib
 
 format:

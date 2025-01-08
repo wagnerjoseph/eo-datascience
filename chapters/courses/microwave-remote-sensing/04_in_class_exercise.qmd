@@ -156,7 +156,7 @@ s1_ds = xr.open_mfdataset(
 
 ## Unlocking Geospatial Information
 
-To enable further stacking of ALOS-1 and Sentinel-1 data we need to know some more information about the raster. Hence we define the following function `print_raster` to get the projection (CRS), resolution, and region (bounds). The function leverages the functionality of `rioxarray`; a package for rasters.
+To enable further stacking of ALOS-2 and Sentinel-1 data we need to know some more information about the raster. Hence we define the following function `print_raster` to get the projection (CRS), resolution, and region (bounds). The function leverages the functionality of `rioxarray`; a package for rasters.
 
 ```{python}
 def print_raster(raster, name):
