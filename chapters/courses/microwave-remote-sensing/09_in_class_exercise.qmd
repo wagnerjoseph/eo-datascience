@@ -14,11 +14,11 @@ A SAR interferogram represents the phase difference between two radar acquisitio
 
 Unwrapping an interferogram is essential for extracting correct information contained in the phase such as surface topography and earth surface deformations.
 
-There are many approaches that tried to solve the unwrapping problem, tackling challenging scenarios involving noise or large phase discontinuities. Here we present the Network-flow Algorithm for phase unwrapping (C. W. Chen and H. A. Zebker, 2000), which is implemented in the SNAPHU package.
+There are many approaches that tried to solve the unwrapping problem, tackling challenging scenarios involving noise or large phase discontinuities. Here we present the Network-flow Algorithm for phase unwrapping (C. W. Chen and H. A. Zebker, 2000), which is implemented in the `snaphu` package.
 
 ## Loading Data
 The data is stored on the Jupyterhub server, so we need to load it using their respective paths.
-In this notebook we will use the resulting wrapped interferogram from `Notebook 8`, but we need to process it in the radar geometry in order to unwrap it (while in `Notebook 8` we end the whole process by performing the geocoding, just for better visualization purposes).
+In this notebook we will use the resulting wrapped interferogram from notebook "Interferograms", but we need to process it in the radar geometry in order to unwrap it (while in notebook "Interferograms" we end the whole process by performing the geocoding, just for better visualization purposes).
 
 
 ```{python}
@@ -293,7 +293,7 @@ The choice of a coherence threshold depends on the balance you want to strike be
 
 Keep in mind that in case of large displacements, such as the Ridgecrest earthquake, phase unwrapping can be problematic and lead to poor results: when the displacement is large, the phase difference becomes wrapped multiple times, leading to phase aliasing. In this case, the phase values become ambiguous, we cannot distinguish between multiple phase wraps, thus leading to incorrect results.
 
-## Applying an equation for the displacement map
+## Applying an Equation for the Displacement Map
 
 From the unwrapped phase image (we will use the phase masked with a coherence threshold of 0.3) we can calculate the displacement map using the following equation:
 
@@ -342,7 +342,7 @@ disp_subset = displacement(subset.unwrapped_coh)
 plt.show()
 ```
 
-## Coarsen approach
+## Coarsen Approach
 
 As the whole data is too large and the processing time already exceeds 20 minutes when using an image with 4000x4000 pixels, we can coarsen the image so that we can unwrap and compute the displacement for the whole scene.
 

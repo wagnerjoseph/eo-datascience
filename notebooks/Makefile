@@ -56,7 +56,7 @@ post-render:
 preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	$(CONDA_ACTIVATE) eo-datascience
 	- mkdir -p _preview/notebooks
-	python -m pip install -e .
+	python -m pip install .
 	cp ./chapters/references.bib ./_preview/notebooks/
 	cp -r ./chapters/images ./_preview/notebooks
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/README.md -nc -P ./_preview

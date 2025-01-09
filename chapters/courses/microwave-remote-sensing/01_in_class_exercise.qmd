@@ -1,5 +1,5 @@
 ---
-title: Discover and Read Sentinel 1 Data
+title: Discover and Read SAR Data
 jupyter:
   kernelspec:
     name: "microwave-remote-sensing"
@@ -8,7 +8,7 @@ jupyter:
 ---
 
 
-This notebook demonstrates how to access radar data in a SpatioTemporal Asset Catalog (STAC) Catalogue using the pystac library. In this example, we use Sentinel-1 data from the EODC (earth observation data and high performance computing service provider based in Vienna) STAC catalog. In the further process, we will learn how to query a STAC catalog, select specific items, and display the metadata and the actual image.
+This notebook demonstrates how to access radar data in a SpatioTemporal Asset Catalog (STAC) Catalogue using the `pystac` library. In this example, we use Sentinel-1 data from the EODC (earth observation data and high performance computing service provider based in Vienna) STAC catalog. In the further process, we will learn how to query a STAC catalog, select specific items, and display the metadata and the actual image.
 
 
 ```{python}
@@ -66,7 +66,7 @@ lonmin, lonmax = 13.8, 17.8  # West to East
 bounding_box = [lonmin, latmin, lonmax, latmax]
 ```
 
-If the region of interest is not rectengular, we can also define a polygon:
+If the region of interest is not rectangular, we can also define a polygon:
 
 ```{python}
 # GEOJSON can be created on geojson.io
@@ -88,7 +88,7 @@ area_of_interest = {
 }
 ```
 
-Using our previously loaded STAC catalog, we can now search for items fullfilling our query. In this example we are using the bounding box. If we want to use an area of interest specified in the geojson format - one hast to use the intersects parameter as documented in the comment below.
+Using our previously loaded STAC catalog, we can now search for items full-filling our query. In this example we are using the bounding box. If we want to use an area of interest specified in the geojson format - one hast to use the intersects parameter as documented in the comment below.
 
 ```{python}
 search = eodc_catalog.search(
@@ -158,7 +158,7 @@ map
 
 STAC can also be a useful tool for the discovery of data, however it only loads metadata. This saves memory, but if one would like to do further analysis, the data has to be loaded into memory or downloaded on disk.
 
-In the following, we will demonstrate this with the library `odc-stac`. Here we can define what data will loaded as `bands`; in this case VV sigma naught. Moreover we can resample the data by providing any coordinate reference system (CRS) and resolution as well as a method for resampling of continuos data (e.g. bilinear resampling). In the example below we use the EQUI7 Grid of Europe and a 20 meter sampling. This is the native format of sigma naught stored at EODC, so there will be no actual resampling. Note, also, that resampling is not advisable for this data, as it is provided on a logarithmic scale. More about this in notebook 2.
+In the following, we will demonstrate this with the library `odc-stac`. Here we can define what data will loaded as `bands`; in this case VV sigma naught. Moreover we can resample the data by providing any coordinate reference system (CRS) and resolution as well as a method for resampling of continuos data (e.g. bilinear resampling). In the example below we use the EQUI7 Grid of Europe and a 20 meter sampling. This is the native format of sigma naught stored at EODC, so there will be no actual resampling. Note, also, that resampling is not advisable for this data, as it is provided on a logarithmic scale. More about this in the notebook "Backscattering Coefficients".
 
 *The chunks argument is an advancement method for performing parallel computations on the data. We will not cover this in further detail.*
 
@@ -184,7 +184,7 @@ Let's have a look at the VV polarized band of the dataset.
 sig0_dc.VV
 ```
 
-As we can see, the data is stored as a `xarray` DataArray. `Xarray` is a convenient package for multidimensional labeled arrays, like temperature, humidity, pressure, different bands of satellite imagery, and so on. [The link](https://docs.xarray.dev/en/stable/index.html) provides detailed documentation. In a later notebook we will explore some more of the functionality of `xarray`. As we can see in the coordinates, the data here consists of 21 time steps.
+As we can see, the data is stored as a `xarray` DataArray. Xarray is a convenient package for multidimensional labeled arrays, like temperature, humidity, pressure, different bands of satellite imagery, and so on. [The link](https://docs.xarray.dev/en/stable/index.html) provides detailed documentation. In a later notebook we will explore some more of the functionality of `xarray`. As we can see in the coordinates, the data here consists of 21 time steps.
 
 In general, data from STAC is "lazily" loaded, which means that the structure of the DataArray is constructed, but the data is not loaded yet. It is loaded only at instance when it is needed, for example, for plotting, computations, and so on.
 

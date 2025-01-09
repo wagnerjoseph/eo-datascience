@@ -1,5 +1,5 @@
 ---
-title: Dielectric Properties of Natural Media
+title: Dielectric Properties
 jupyter:
   kernelspec:
     name: "microwave-remote-sensing"
@@ -33,7 +33,7 @@ hv.extension("bokeh")
 
 ## Load Sentinel-1 Data
 
-For our analysis we are using sigma naught backscatering data from Sentinel-1. The images we are analyzing cover the region south of Vienna and west of Neusiedlersee Lake. We load the data and and apply again a preprocessing function. Here we extract the scaling factor and the date the image was taken from the metadata. We will focus our attention to a smaller area containing a part of the Neusiedlersee Lake and its surrounding land. The obtained`xarray` dataset and is then converted to an array, because we only have one variable, the VV backscatter values.
+For our analysis we are using sigma naught backscatering data from Sentinel-1. The images we are analyzing cover the region south of Vienna and west of Lake Neusiedl. We load the data and and apply again a preprocessing function. Here we extract the scaling factor and the date the image was taken from the metadata. We will focus our attention to a smaller area containing a part of the Lake Neusiedl Lake and its surrounding land. The obtained`xarray` dataset and is then converted to an array, because we only have one variable, the VV backscatter values.
 
 ```{python}
 url = "https://huggingface.co/datasets/martinschobben/microwave-remote-sensing/resolve/main/microwave-remote-sensing.yml"

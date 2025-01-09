@@ -49,7 +49,9 @@ jobs:
           path: |
             ~/.local/share/jupyter/kernels
             ~/.cache/pip
+            /usr/share/miniconda/envs
             ./chapters/courses/.jupyter_cache
+            ./chapters/courses/microwave-remote-sensing/.jupyter_cache
             ./chapters/templates/.jupyter_cache
             ./chapters/tutorials/.jupyter_cache
           key: ${{ runner.os }}-env-${{ hashFiles('./environment.yml', './notebooks/**/*.yml') }}

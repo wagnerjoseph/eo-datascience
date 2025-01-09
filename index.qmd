@@ -1,3 +1,3 @@
 # Preface {.unnumbered}
 
-This is a collection of Jupyter notebooks for education at the TU Wien. 
+This is a collection of Jupyter notebooks showcasing earth observation (EO) data products and common workflows for handling the data. It is a demonstration of the shared capabilities of the EODC/TU Wien digital learning environment.
