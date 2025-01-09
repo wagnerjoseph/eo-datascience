@@ -67,10 +67,10 @@ jobs:
         run: |
           python -m pip install .
           render_sfinx_toc ./pythia
-          clean_nb ./chapters  ./pythia/notebooks
-          cp ./Makefile ./pythia/
-          cp ./chapters/references.bib ./pythia/notebooks/
-          cp $(find notebooks -name "*.yml") ./pythia/notebooks/
+          clean_nb ./notebooks  ./pythia/notebooks
+          cp -rf ./Makefile ./pythia/
+          cp -rf ./chapters/references.bib ./pythia/notebooks/
+          cp -rf --parents $(find notebooks -name "*.yml") ./pythia
           cd ./pythia
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
