@@ -33,7 +33,7 @@ To get the same projection, resolution, and region we have to resample one (or m
 
 *Figure 1: Stacking of arrays to form datacubes (source: https://eox.at)*.
 
-In this notebook we will study two different SAR products. SAR data from the Advanced Land Observing Satellite (ALOS-2), which is a Japanese platform with an L-band sensor from the Japan Aerospace Exploration Agency (JAXA), and C-band data from the Copernicus Sentinel-1 mission. It is our goal to compare C- with L-band, so we need to somehow stack these arrays.
+In this notebook we will study two different SAR products. SAR data from the Advanced Land Observing Satellite (Alos-2), which is a Japanese platform with an L-band sensor from the Japan Aerospace Exploration Agency (JAXA), and C-band data from the Copernicus Sentinel-1 mission. It is our goal to compare C- with L-band, so we need to somehow stack these arrays.
 
 
 ```{python}

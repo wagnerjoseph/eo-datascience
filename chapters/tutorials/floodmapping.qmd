@@ -11,7 +11,7 @@ jupyter:
 ![Image from [wikipedia](https://upload.wikimedia.org/wikipedia/commons/d/d4/Thomas_Bayes.gif)](https://upload.wikimedia.org/wikipedia/commons/d/d4/Thomas_Bayes.gif)
 
 ::: {.callout-note}
-This notebooks contains interactive element. The full interactive element can only be viewed on Binder by clicking on the Binder badge or 🚀 button.
+This notebook contains interactive elements. The full interactive elements can only be viewed on Binder by clicking on the Binder badge or 🚀 button.
 :::
 
 

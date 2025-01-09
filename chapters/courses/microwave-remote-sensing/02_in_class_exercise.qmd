@@ -38,7 +38,7 @@ In the following example, we will:
 
 ## Search for some Data
 
-Now, we start by loading data from Sentinel-1 from the `EODC` STAC Catalogue. We do this in the same way as in the previous notebook 1.
+Now, we start by loading data from Sentinel-1 from the EODC STAC Catalogue. We do this in the same way as in the previous notebook "Discover and Read SAR Data".
 
 ```{python}
 latmin, latmax = 48, 48.5
@@ -82,7 +82,7 @@ sig0_dc
 
 ## Comparison of the Data in dB and Linear Scale
 
-In the next two cells we will select a subset of the data. This is done to reduce the amount of data we are working with. The precice workflow is not important for now, since the theory is explained after the cells. They are just here to show the data we are working with.
+In the next two cells we will select a subset of the data. This is done to reduce the amount of data we are working with. The precise workflow is not important for now, since the theory is explained after the cells. They are just here to show the data we are working with.
 
 ```{python}
 subset = sig0_dc.sel(time=slice("2022-07-01", "2022-07-07"))
@@ -265,7 +265,7 @@ As you can see in the example, the mean values across the scene are different in
 
 ## Save Mean Mosaic as Tif File
 
-Often we want to store the output of a computation permanently on a file system. The most common file format for this is a GeoTIFF (TIF file with additional information on the georeference). The following cell indicates how this can be easily done with Xarray. When we want to store the data as a GeoTIFF we need to make sure to provide a spatial reference to geolocate the data. The best way to check whether the Xarray has a coordinate reference system (CRS) is by using the rioxarray `rio.crs` accessor. More about this in notebook 4.
+Often we want to store the output of a computation permanently on a file system. The most common file format for this is a GeoTIFF (TIF file with additional information on the georeference). The following cell indicates how this can be easily done with Xarray. When we want to store the data as a GeoTIFF we need to make sure to provide a spatial reference to geolocate the data. The best way to check whether the Xarray has a coordinate reference system (CRS) is by using the rioxarray `rio.crs` accessor. More about this in notebook "Datacubes".
 
 ```{python}
 # Select some data which we want to save
@@ -274,7 +274,7 @@ data_2_save.rio.crs
 ```
 
 In this case, the spatial reference is the EPSG Code `EPSG:27704`, which is the `Equi7Grid Europe`.
-As the output dataarray already has a spatial reference we now save it as a raster file
+As the output data array already has a spatial reference we now save it as a raster file
 
 ```{python}
 # Save the data

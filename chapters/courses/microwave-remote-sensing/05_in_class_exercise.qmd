@@ -1,5 +1,5 @@
 ---
-title: SAR Wavelength and Polarization
+title: Wavelength and Polarization
 jupyter:
   kernelspec:
     name: "microwave-remote-sensing"
@@ -13,7 +13,7 @@ In this notebook, we aim to demonstrate how C-band (4–8 GHz, wavelengths of ap
 + Sentinel-1 (C-band)
     + VV
     + VH
-+ ALOS-2 (L-band):
++ Alos-2 (L-band):
     + HH
     + HV
 
@@ -30,7 +30,7 @@ import holoviews as hv
 
 ## Data Loading
 
-We load the data again with the help of `intake`
+We load the data again with the help of `intake`.
 
 ```{python}
 url = "https://huggingface.co/datasets/martinschobben/microwave-remote-sensing/resolve/main/microwave-remote-sensing.yml"
@@ -80,7 +80,7 @@ plt.tight_layout()
 
 Now we can see that areas with high mean LAI values (Figure 1) show a drop-off to values as low as those for areas with low mean LAI during the autumn months (Figure 2 ; right panel). Hence we might deduce that we deal with deciduous forest that becomes less green during autumn, as can be expected for the study area.
 
-Remember that longer wavelengths like L-bands are more likely to penetrate through a forest canopy and would interact more readily with larger object like tree trunks and the forest floor. In turn, C-band microwaves are more likely to interact with sparse and shrub vegetation. The polarization of the emitted and received microwaves is on the other hand dependent on the type of backscattering with co-polarization (HH and VV) happening more frequently with direct backscatter or double bounce scattering. Whereas volume scattering occurs when the radar signal is subject to multiple reflections within 3-dimensional matter, as the orientation of the main scatterers is random, the polarisation of the backscattered signal is also random. Volume scattering can therefore cause an increase of cross-polarized intensity.
+Remember that longer wavelengths like L-bands are more likely to penetrate through a forest canopy and would interact more readily with larger object like tree trunks and the forest floor. In turn, C-band microwaves are more likely to interact with sparse and shrub vegetation. The polarization of the emitted and received microwaves is on the other hand dependent on the type of backscattering with co-polarization (HH and VV) happening more frequently with direct backscatter or double bounce scattering. Whereas volume scattering occurs when the radar signal is subject to multiple reflections within 3-dimensional matter, as the orientation of the main scatterers is random, the polarization of the backscattered signal is also random. Volume scattering can therefore cause an increase of cross-polarized intensity.
 
 Let's put this to the test by checking the microwave backscatter signatures over forested and sparsely vegetated areas as well as water bodies (Lake Garda). Let's first look at the different sensor readings for the beginning of summer and autumn.
 
@@ -102,9 +102,9 @@ t2 = fused_ds.gam0.\
 t1 + t2
 ```
 
-*Figure 3: Maps of Sentinel-1 and ALOS-2 $\gamma^0_T \,[dB]$ for the beginning of summer (left) and autumn (right).*
+*Figure 3: Maps of Sentinel-1 and Alos-2 $\gamma^0_T \,[dB]$ for the beginning of summer (left) and autumn (right).*
 
-The most notable difference is the lower energy received for cross-polarized than for co-polarized microwaves for both Sentinel-1 and ALOS-2. The latter differences are independent of the time of year. However, one can also note small changes in the received energy for the same satellite dependent on the time of year. To get a better feel for these changes over time we generate the following interactive plot. On the following plot one can select areas of a certain mean LAI (by clicking on the map) and see the associated timeseries of $\gamma^0_T$ for each of the sensors.
+The most notable difference is the lower energy received for cross-polarized than for co-polarized microwaves for both Sentinel-1 and Alos-2. The latter differences are independent of the time of year. However, one can also note small changes in the received energy for the same satellite dependent on the time of year. To get a better feel for these changes over time we generate the following interactive plot. On the following plot one can select areas of a certain mean LAI (by clicking on the map) and see the associated timeseries of $\gamma^0_T$ for each of the sensors.
 
 ```{python}
 LAI_image = LAI_mean.hvplot.\
@@ -149,9 +149,9 @@ time_series = hv.DynamicMap(get_timeseries, streams=[point_stream])
 LAI_image + time_series
 ```
 
-*Figure 4: Map of MEAN LAI around Lake Garda. The pixel values can be seen by hovering your mouse over the pixels. Clicking on the pixel will generate the timeseries for the associated mean LAI on the right hand-side. (Right) Timeseries of for Sentinel-1 and ALOS-2 $\gamma^0_T [dB]$.*
+*Figure 4: Map of MEAN LAI around Lake Garda. The pixel values can be seen by hovering your mouse over the pixels. Clicking on the pixel will generate the timeseries for the associated mean LAI on the right hand-side. (Right) Timeseries of for Sentinel-1 and Alos-2 $\gamma^0_T [dB]$.*
 
-Can you see some patterns when analysing the different wavelengths and polarizations?
+Can you see some patterns when analyzing the different wavelengths and polarizations?
 
-Remember again that we deal with a logarithmic scale. A measurement of 10 dB is 10 times brighter than the intensity measured at 0 dB, and 100 times brighter at 20 dB. The most notable difference is that the offset between cross- and co-polarised signals becomes larger at low LAI and lower at higher LAI. This might indicate the effect of volume scattering in forested areas where co- and cross-polarisation render backscattering values more equal. You will study the differences among cross- and co-polarized backscattering in more detail in the homework exercise.
+Remember again that we deal with a logarithmic scale. A measurement of 10 dB is 10 times brighter than the intensity measured at 0 dB, and 100 times brighter at 20 dB. The most notable difference is that the offset between cross- and co-polarised signals becomes larger at low LAI and lower at higher LAI. This might indicate the effect of volume scattering in forested areas where co- and cross-polarization render backscattering values more equal. You will study the differences among cross- and co-polarized backscattering in more detail in the homework exercise.
 

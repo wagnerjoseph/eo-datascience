@@ -9,9 +9,9 @@ jupyter:
 
 This notebook will provide an empirical demonstration of speckle - how it originates, how it visually and statistically looks like, and some of the most common approaches to filter it.
 
-Speckle is defined as a kind of noise that affects all radar images. Given the multiple scattering contributions originating from the various elementary objects present within a resolution cell, the resulting backscatter signal can be described as a random constructive and destructive interference of wavelets. As a consequence, speckle is the reason why a granular pattern normally affects SAR images, making it more challenging to interpret and analyse them.
+Speckle is defined as a kind of noise that affects all radar images. Given the multiple scattering contributions originating from the various elementary objects present within a resolution cell, the resulting backscatter signal can be described as a random constructive and destructive interference of wavelets. As a consequence, speckle is the reason why a granular pattern normally affects SAR images, making it more challenging to interpret and analyze them.
 
-![](../../images/speckle_effect.png){width=300}
+![](../../images/speckle_effect.png)
 
 *Credits: ESRI*
 
@@ -272,7 +272,7 @@ plot_variability(fused_ds)
 
 *Figure 2: Lake Neusiedl $\sigma^0_E$ without any filter.*
 
-The speckle noise tipycally appears as a "salt-and-pepper" pattern. Also, please note the distribution of backscatter for each land cover. Even though speckle is known for following non-normal distributions (i.e., Rayleigh distribution for amplitude in the linear domain, and the Gumple for intensity in the log domain), we can assume that due to the Central Limit Theorem, the overall backscatter means (dB) tend to follow a Gaussian distribution.
+The speckle noise typically appears as a "salt-and-pepper" pattern. Also, please note the distribution of backscatter for each land cover. Even though speckle is known for following non-normal distributions (i.e., Rayleigh distribution for amplitude in the linear domain, and the Gumple for intensity in the log domain), we can assume that due to the Central Limit Theorem, the overall backscatter means (dB) tend to follow a Gaussian distribution.
 
 We can mitigate speckle (it is impossible to remove it completely) by following approaches such as:
 - spatial filtering - taking mean backscatter value over the same land cover, or

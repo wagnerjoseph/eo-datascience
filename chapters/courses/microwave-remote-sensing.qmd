@@ -7,4 +7,8 @@ jupyter:
     display_name: "microwave-remote-sensing"
 ---
 
-This course ...
+This course at the TU Wien teaches course, students are able to read, visualize and analyze Synthetic Aperture Radar (SAR) data. This will aid interpretation of SAR data based upon a physical understanding of sensing principles and the interaction of microwaves with natural objects.
+
+::: {.callout-note}
+This notebook contains interactive element. The full interactive elements can only be viewed on Binder by clicking on the Binder badge or 🚀 button.
+:::
