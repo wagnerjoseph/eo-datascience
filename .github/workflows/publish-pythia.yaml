@@ -71,6 +71,7 @@ jobs:
           clean_nb ./notebooks  ./pythia/notebooks
           cp -rf ./Makefile ./pythia/
           cp -rf ./chapters/references.bib ./pythia/notebooks/
+          cp -rf --parents ./notebooks/images ./pythia
           cp -rf --parents $(find notebooks -name "*.yml") ./pythia
           cd ./pythia
           find . -name '*.ipynb' -exec nbstripout {} +
