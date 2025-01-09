@@ -36,18 +36,12 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Install Python and Dependencies
+      - name: Install Python and Jupyter
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
       - run: pip install jupyter jupyter-cache
-
-      - name: Get Jupyter Cache Dir
-        id: jupyter-cache
-        shell: bash
-        run: |
-          echo "dir=$(cd chapters && find ~+ -name ".jupyter_cache")" >> $GITHUB_OUTPUT
 
       - name: Cache Environment
         uses: actions/cache@v4
@@ -55,8 +49,9 @@ jobs:
           path: |
             ~/.local/share/jupyter/kernels
             ~/.cache/pip
-            /usr/share/miniconda/envs
-            ${{ steps.jupyter-cache.outputs.dir }}
+            ./chapters/courses/.jupyter_cache
+            ./chapters/templates/.jupyter_cache
+            ./chapters/tutorials/.jupyter_cache
           key: ${{ runner.os }}-env-${{ hashFiles('./environment.yml', './notebooks/**/*.yml') }}
           restore-keys: ${{ runner.os }}-env-
 
