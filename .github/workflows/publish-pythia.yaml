@@ -18,13 +18,11 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout Quarto Book
-        if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Checkout Pythia Book
-        if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4
         with:
           repository: tuw-geo/eo-datascience-cookbook
