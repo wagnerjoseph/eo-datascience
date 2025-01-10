@@ -12,6 +12,10 @@ book:
     - Wolfgang Wagner
     - Nikolas Pikall
     - Martin Schobben
+    - Joseph Wagner
+    - Davide Festa
+    - Felix David Reuß
+    - Luka Jovic
   date: "`python -c \"import datetime; print(datetime.datetime.now())\"`"
   chapters:
     - index.qmd

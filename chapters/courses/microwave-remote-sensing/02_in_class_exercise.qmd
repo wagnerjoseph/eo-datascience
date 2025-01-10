@@ -45,7 +45,7 @@ latmin, latmax = 48, 48.5
 lonmin, lonmax = 16, 17
 bounds = (lonmin, latmin, lonmax, latmax)
 
-time_range = "2022-01-01/2022-12-30"
+time_range = "2022-07-01/2022-07-31"
 
 items = (
     pystac_client.Client.open("https://stac.eodc.eu/api/v1")
