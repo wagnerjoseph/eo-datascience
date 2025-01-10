@@ -64,7 +64,7 @@ datasets = [iw1_ds, iw2_ds, iw3_ds]
 val_range = dict(vmin=0, vmax=255, cmap="gray")
 
 for i, ds in enumerate(datasets):
-    im = abs(ds.vv).plot(ax=ax[i], add_colorbar=False, **val_range)
+    im = ds.intensity.plot(ax=ax[i], add_colorbar=False, **val_range)
     ax[i].tick_params(axis="both", which="major")
 
 cbar = fig.colorbar(im, ax=ax, orientation="horizontal", shrink=0.9, pad=0.2)
@@ -76,18 +76,14 @@ We don’t need all three of the subswaths for our notebook, so we will focus on
 
 ```{python}
 # Compute the intensity and phase from complex data
-intensity = abs(iw2_ds.vv)
-phase = xr.apply_ufunc(
-    np.angle, iw2_ds.vv, dask="parallelized", output_dtypes=[float]
-)
 cmap_hls = sns.hls_palette(as_cmap=True)
 
 fig, axes = plt.subplots(1, 2, figsize=(15, 6))
 
-intensity.plot(ax=axes[0], cmap="gray", robust=True)
+ds.intensity.plot(ax=axes[0], cmap="gray", robust=True)
 axes[0].set_title("Intensity Measurement of IW2")
 
-phase.plot(ax=axes[1], cmap=cmap_hls)
+ds.phase.plot(ax=axes[1], cmap=cmap_hls)
 axes[1].set_title("Phase Measurement of IW2")
 
 plt.tight_layout()
