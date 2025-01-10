@@ -31,4 +31,4 @@ dependencies:
   - seaborn
   - snaphu
   - xarray
-  - zarr
+  - zarr=2.18.4
