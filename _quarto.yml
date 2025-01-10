@@ -16,7 +16,7 @@ book:
     - Davide Festa
     - Felix David Reuß
     - Luka Jovic
-  date: "`python -c \"import datetime; print(datetime.datetime.now())\"`"
+  date: "10 January 2025"
   chapters:
     - index.qmd
     - part: chapters/courses/microwave-remote-sensing.qmd
