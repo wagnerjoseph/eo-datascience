@@ -30,7 +30,7 @@ We first load our data from the following [intake](https://intake.readthedocs.io
 ```{python}
 url = "https://huggingface.co/datasets/martinschobben/microwave-remote-sensing/resolve/main/microwave-remote-sensing.yml"
 cat = intake.open_catalog(url)
-gtc_dc = cat.gtc.read()
+gtc_dc = cat.gtc.read().compute()
 gtc_dc
 ```
 
@@ -101,7 +101,7 @@ As we can see, not all the geometric distortions can be corrected by the algorit
 In this chapter, we will look at some of the different backscatter coefficients in more detail ($\sigma^0_E$ or $\gamma^0_E$), where both coefficients are geometrically terrain corrected. The difference is the plane of the reference area, which is the ground area as a tangent on an ellipsoidal Earth model for $\sigma^0_E$ and perpendicular to the line of sight for $\gamma^0_E$ (Figure 5). For this, we load a new datacube which includes $\sigma^0_E$ and the Incidence Angle for each pixel. We visualize the cube with the same method as before.
 
 ```{python}
-coef_dc = cat.coef.read()
+coef_dc = cat.coef.read().compute()
 coef_dc.hvplot.image(x="x", y="y", robust=True, data_aspect=1, cmap="Greys_r",
                      groupby="band", rasterize=True).\
                         opts(frame_height=600, framewise=False, aspect="equal")
@@ -143,7 +143,7 @@ Comparing $\sigma^0_E$ and $\gamma^0_E$ in the figure, we can see that both look
 So far, we corrected geometric distortions and compared the impact of the choice of the reference area. However, we still haven't corrected the backscatter intensity of pixels which are distorted by the terrain. In this last step, we will show that we can also correct radiometric artifacts to a certain degree. For this, we will load radiometrically terrain corrected (`rtc`) $\gamma^0_T$ and plot it along the other coefficients.
 
 ```{python}
-rtc_dc = cat.rtc.read()
+rtc_dc = cat.rtc.read().compute()
 
 # add to existing cube
 rtc_dc = xr.concat([coef_dc, rtc_dc], dim="band")
