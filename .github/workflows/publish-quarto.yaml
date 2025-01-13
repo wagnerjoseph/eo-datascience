@@ -52,9 +52,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Cache Binder Build on mybinder.org
-      #   uses: jupyterhub/repo2docker-action@master
-      #   with:
-      #     NO_PUSH: true
-      #     MYBINDERORG_TAG: ${{ github.event.ref }}
-      #     REPO2DOCKER_EXTRA_ARGS: --subdir notebooks
+      - name: Cache Binder Build on mybinder.org
+        uses: jupyterhub/repo2docker-action@master
+        with:
+          NO_PUSH: true
+          MYBINDERORG_TAG: ${{ github.event.ref }}
+          REPO2DOCKER_EXTRA_ARGS: --subdir notebooks

@@ -69,7 +69,6 @@ jobs:
           python -m pip install nbstripout
           render_sfinx_toc ./pythia
           clean_nb ./notebooks  ./pythia/notebooks
-          cp -rf ./Makefile ./pythia/
           cp -rf ./chapters/references.bib ./pythia/notebooks/
           cp -rf --parents ./notebooks/images ./pythia
           cp -rf --parents $(find notebooks -name "*.yml") ./pythia
