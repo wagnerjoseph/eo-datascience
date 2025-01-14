@@ -3,6 +3,8 @@ title: "Earth Observation Datascience"
 format: gfm
 ---
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tuw-geo/eo-datascience/main)
+
 This is a book on Earth Observation Datascience, consisting of common workflows in Python at the Department of Geodesy and Geoinformation at the TU Wien (Vienna Austria).
 
 The workflows comprise exercises that utilize remote sensing information, such as microwave backscattering from Sentinel-1 and visible range imagery from Sentinel-2.
