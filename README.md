@@ -1,6 +1,8 @@
 # Earth Observation Datascience
 
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tuw-geo/eo-datascience/main)
+
 This is a book on Earth Observation Datascience, consisting of common
 workflows in Python at the Department of Geodesy and Geoinformation at
 the TU Wien (Vienna Austria).

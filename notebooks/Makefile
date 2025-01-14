@@ -68,9 +68,10 @@ preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	jupyter-book build ./_preview
 
 clean:
-	rm --force --recursive .ipynb_checkpoints/ **/.ipynb_checkpoints/ _book/ \
-		_freeze/ .quarto/ _preview/ ./pytest_cache ./**/**/**/.jupyter_cache \
-		./**/**/.jupyter_cache
+	rm --force --recursive **/.ipynb_checkpoints **/**/.ipynb_checkpoints \
+		**/**/**/.ipynb_checkpoints  **/.jupyter_cache \
+		**/**/.jupyter_cache **/**/**/.jupyter_cache \
+		_book _freeze .quarto _preview ./pytest_cache
 
 teardown:
 	conda remove -n eo-datascience --all -y
