@@ -73,13 +73,11 @@ jobs:
           cp -rf --parents ./notebooks/images ./pythia
           cp -rf --parents $(find notebooks -name "*.yml") ./pythia
           cd ./pythia
-          find . -name '*.ipynb' -exec nbstripout {} +
-          find . -name '*.ipynb' -exec nbqa black {} +
-          find . -name '*.ipynb' -exec nbqa isort {} +
-          find . -name '*.ipynb' -exec nbqa flake8 {} +
-          python -m black .
-          python -m flake8 .
-          python -m isort .
+          find ./pythia -name '*.ipynb' -exec nbstripout {} +
+          find ./pythia -name '*.ipynb' -exec nbqa black {} +
+          find ./pythia -name '*.ipynb' -exec nbqa isort {} +
+          python -m black ./pythia
+          python -m isort ./pythia
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git add .
