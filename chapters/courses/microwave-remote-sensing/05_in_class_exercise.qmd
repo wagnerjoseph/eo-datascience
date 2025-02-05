@@ -20,11 +20,9 @@ In this notebook, we aim to demonstrate how C-band (4–8 GHz, wavelengths of ap
 
 ```{python}
 import numpy as np
-import xarray as xr
 import intake
-
 import matplotlib.pyplot as plt
-import hvplot.xarray  # noqa
+import hvplot.xarray  # noqa: F401
 import holoviews as hv
 ```
 
@@ -154,4 +152,3 @@ LAI_image + time_series
 Can you see some patterns when analyzing the different wavelengths and polarizations?
 
 Remember again that we deal with a logarithmic scale. A measurement of 10 dB is 10 times brighter than the intensity measured at 0 dB, and 100 times brighter at 20 dB. The most notable difference is that the offset between cross- and co-polarised signals becomes larger at low LAI and lower at higher LAI. This might indicate the effect of volume scattering in forested areas where co- and cross-polarization render backscattering values more equal. You will study the differences among cross- and co-polarized backscattering in more detail in the homework exercise.
-

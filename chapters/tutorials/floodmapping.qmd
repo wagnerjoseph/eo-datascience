@@ -24,7 +24,7 @@ import numpy as np
 import xarray as xr
 import numpy as np
 import datetime
-import rioxarray
+import rioxarray  # noqa: F401
 import pandas as pd
 
 import hvplot.pandas
@@ -93,8 +93,9 @@ def post_process_eodc_cube(dc, items, bands):
 
 
 def post_process_eodc_cube_(dc, items, band):
-    scale = items[0].assets[band].extra_fields.get("raster:bands")[0]["scale"]
-    nodata = items[0].assets[band].extra_fields.get("raster:bands")[0]["nodata"]
+    fields = items[0].assets[band].extra_fields
+    scale = fields.get("raster:bands")[0]["scale"]
+    nodata = fields.get("raster:bands")[0]["nodata"]
     return dc.where(dc != nodata) / scale
 
 
@@ -312,7 +313,9 @@ likelihood_pdi = hvplot.bind(
 ).interactive()
 
 view_likelihoods = (
-    likelihood_pdi.hvplot("sigma", "water_likelihood", ylabel="likelihoods").dmap()
+    likelihood_pdi.hvplot(
+        "sigma", "water_likelihood",
+        ylabel="likelihoods").dmap()
     * likelihood_pdi.hvplot("sigma", "land_likelihood").dmap()
     * likelihood_pdi.hvplot("observed", "land_likelihood").dmap()
 ).opts(frame_height=200, frame_width=300)
@@ -349,7 +352,9 @@ def calc_posteriors(sigma, x=None, y=None):
     land_likelihood = calc_land_likelihood(sigma=sigma, x=x, y=y)
     water_likelihood = calc_water_likelihood(sigma=sigma, x=x, y=y)
     evidence = (water_likelihood * 0.5) + (land_likelihood * 0.5)
-    return (water_likelihood * 0.5) / evidence, (land_likelihood * 0.5) / evidence
+    water_posterior = (water_likelihood * 0.5) / evidence
+    land_posterior = (land_likelihood * 0.5) / evidence
+    return water_posterior, land_posterior
 ```
 
 We can plot the posterior probabilities of flooding and non-flooding again and compare these to pixel's measured $\sigma^0$. For reference we model the flood and non-flood posteriors (`model_posteriors`) over a range of $\sigma^0$ values. **Hover** on a pixel to calculate the posterior probability.
@@ -446,8 +451,8 @@ colorbar_opts = {
     "ticker": FixedTicker(ticks=[0, 1]),
 }
 flood_view = flood_dc.decision.hvplot.image(
-    x="x", y="y", rasterize=True, geo=True, cmap=["rgba(0, 0, 1, 0.1)", "darkred"]
+    x="x", y="y", rasterize=True, geo=True,
+    cmap=["rgba(0, 0, 1, 0.1)", "darkred"]
 ).opts(frame_height=400, colorbar_opts={**colorbar_opts})
 mrs_view.get(0) * flood_view
 ```
-

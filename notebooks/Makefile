@@ -6,6 +6,7 @@ YML = $(wildcard notebooks/**/*.yml)
 REQ := $(basename $(notdir $(YML)))
 NB != find chapters -name "*.quarto_ipynb" -o  -name "*.ipynb" -not -path \
 	"*/.jupyter_cache/*"
+QN != git diff --cached --name-only "***.ipynb"
 
 CONDA_ENV != conda info --base
 CONDA_ACTIVATE := source $(CONDA_ENV)/etc/profile.d/conda.sh ; \
@@ -53,6 +54,11 @@ post-render:
 	cp ./Makefile ./notebooks/
 	cp -r ./chapters/images ./notebooks
 
+convert:
+	$(foreach f, $(QN), \
+		quarto convert $(f); \
+		mv $(subst .ipynb,.qmd, $(f)) $(subst notebooks,chapters,$(subst .ipynb,.qmd,$(f))); )
+
 preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	$(CONDA_ACTIVATE) eo-datascience
 	- mkdir -p _preview/notebooks
@@ -68,10 +74,9 @@ preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	jupyter-book build ./_preview
 
 clean:
-	rm --force --recursive **/.ipynb_checkpoints **/**/.ipynb_checkpoints \
-		**/**/**/.ipynb_checkpoints  **/.jupyter_cache \
-		**/**/.jupyter_cache **/**/**/.jupyter_cache \
-		_book _freeze .quarto _preview ./pytest_cache
+	rm --force --recursive .ipynb_checkpoints/ **/.ipynb_checkpoints/ _book/ \
+		_freeze/ .quarto/ _preview/ ./pytest_cache ./**/**/**/.jupyter_cache \
+		./**/**/.jupyter_cache
 
 teardown:
 	conda remove -n eo-datascience --all -y

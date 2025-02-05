@@ -40,15 +40,13 @@ In this notebook we will study two different SAR products. SAR data from the Adv
 import numpy as np
 import pandas as pd
 import xarray as xr
-import rioxarray  # noqa
-import hvplot.xarray  # noqa
+import rioxarray  # noqa: F401
+import hvplot.xarray  # noqa: F401
 import folium
-
 from huggingface_hub import snapshot_download
 from shapely.geometry import mapping, box
 from shapely import affinity
 from rasterio.enums import Resampling
-
 from pathlib import Path
 from functools import partial
 ```
@@ -299,4 +297,3 @@ fused_da.\
 ```
 
 *Figure 3: Stacked array with ALOS-2 L-band and Sentinel-1 C-band $\gamma^0_T (dB)$.*
-

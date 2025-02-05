@@ -23,7 +23,7 @@ import pystac_client
 import odc.stac
 import matplotlib.pyplot as plt
 import xarray as xr
-import rioxarray  # noqa
+import rioxarray  # noqa: F401
 ```
 
 ## Exploring the Data
@@ -288,4 +288,3 @@ data_2_save.rio.to_raster(
 loaded_data = xr.open_dataset("sig0_mean_mosaic_july.tif", engine="rasterio")
 loaded_data
 ```
-

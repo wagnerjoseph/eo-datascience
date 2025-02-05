@@ -27,7 +27,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import xarray as xr
-from pathlib import Path
 import cmcrameri as cmc  # noqa: F401
 import snaphu
 import seaborn as sns
@@ -427,4 +426,3 @@ In the following animation, we can capture the 3D displacement caused by the Rid
 
 ![](../../images/ridgecrest.gif)
 *Credits: NASA*
-

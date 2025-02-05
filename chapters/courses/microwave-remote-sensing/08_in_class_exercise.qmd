@@ -19,8 +19,6 @@ This notebook will outline the process of working with interferograms and the st
 
 
 ```{python}
-import xarray as xr
-import numpy as np
 import matplotlib.pyplot as plt
 import hvplot.xarray  # noqa: F401
 import seaborn as sns
@@ -28,7 +26,6 @@ import holoviews as hv
 import folium
 import base64
 import intake
-from pathlib import Path
 from io import BytesIO
 
 hv.extension("bokeh")
@@ -285,4 +282,3 @@ folium.LayerControl().add_to(m)
 
 m
 ```
-

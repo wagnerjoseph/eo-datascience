@@ -14,13 +14,9 @@ In this notebook, we will introduce some of the steps involved in the processing
 import numpy as np
 import xarray as xr
 import intake
-
-import rioxarray #noqa
-import matplotlib.pyplot as plt # noqa
-import hvplot.xarray  # noqa
-
-from pathlib import Path
-from functools import partial
+import rioxarray # noqa: F401
+import matplotlib.pyplot as plt # noqa: F401
+import hvplot.xarray  # noqa: F401
 ```
 
 ## Loading Backscatter Data
@@ -156,4 +152,3 @@ rtc_dc.hvplot.image(x="x", y="y", robust=True, data_aspect=1, cmap="Greys_r",
 *Figure 7: $\sigma^0_E$, $\gamma^0_E$, and $\gamma^0_T$ can be selected on the right-hand side of the graphic.*
 
 When comparing $\gamma^0_E$ and $\gamma^0_T$ in the plot we can clearly see the impact of the radiometric correction in the mountainous areas. This correction is necessary, because for slopes facing towards the sensor, a larger ground area contributes to the backscatter value of a slant range resolution cell, than for slopes lying in the opposite direction. This results in significant brightness changes, where foreshortening areas appear brighter and lengthening areas darker. $\gamma^0_T$ adjusts the backscatter to represent what it would be if the terrain was flat, thus reducing these effects. This significantly reduces the impact of the terrain on the backscatter values, allowing for more accurate comparisons across different terrain types and locations. The correction is done by using a DEM to determine the local illuminated area at each radar position. The above illustrated approach is also referred to as terrain flattening because in the resulting image, mountains appear flat. As $\gamma^0_T$ is corrected for geometric and radiometric distortions, it is also referred to as Normalized Radar Backscatter (NRB) and is the current standard for Analysis-Ready-Backscatter (ARD).
-
