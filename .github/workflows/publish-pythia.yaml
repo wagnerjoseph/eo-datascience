@@ -1,15 +1,15 @@
 on:
   workflow_dispatch:
   push:
-    tags: [ v* ]
+    tags: [v*]
     # When a tag like v2024.11.27 is created, the workflow will be triggered
     # Should follow https://calver.org/ for versioning
 
 name: Pythia Publish
 
 permissions:
-    contents: write
-    pages: write
+  contents: write
+  pages: write
 
 jobs:
   build-deploy:
@@ -25,7 +25,7 @@ jobs:
       - name: Checkout Pythia Book
         uses: actions/checkout@v4
         with:
-          repository: tuw-geo/eo-datascience-cookbook
+          repository: ProjectPythia/eo-datascience-cookbook
           path: pythia
           fetch-depth: 0
           token: ${{ secrets.BOT_TOKEN }}
@@ -37,8 +37,8 @@ jobs:
       - name: Install Python and Jupyter
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
       - run: pip install jupyter jupyter-cache
 
       - name: Cache Environment
@@ -66,7 +66,7 @@ jobs:
       - name: Commit Files Pythia Book
         run: |
           python -m pip install .
-          python -m pip install nbstripout
+          python -m pip install nbstripout black flake8 isort nbqa
           render_sfinx_toc ./pythia
           clean_nb ./notebooks  ./pythia/notebooks
           cp -rf ./chapters/references.bib ./pythia/notebooks/
@@ -74,6 +74,12 @@ jobs:
           cp -rf --parents $(find notebooks -name "*.yml") ./pythia
           cd ./pythia
           find . -name '*.ipynb' -exec nbstripout {} +
+          find . -name '*.ipynb' -exec nbqa black {} +
+          find . -name '*.ipynb' -exec nbqa isort {} +
+          find . -name '*.ipynb' -exec nbqa flake8 {} +
+          python -m black .
+          python -m flake8 .
+          python -m isort .
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git add .
