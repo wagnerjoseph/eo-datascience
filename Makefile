@@ -6,6 +6,7 @@ YML = $(wildcard notebooks/**/*.yml)
 REQ := $(basename $(notdir $(YML)))
 NB != find chapters -name "*.quarto_ipynb" -o  -name "*.ipynb" -not -path \
 	"*/.jupyter_cache/*"
+QN != git diff --cached --name-only "***.ipynb"
 
 CONDA_ENV != conda info --base
 CONDA_ACTIVATE := source $(CONDA_ENV)/etc/profile.d/conda.sh ; \
@@ -52,6 +53,11 @@ post-render:
 		mv $(f) "$(subst chapters,notebooks,$(subst .quarto_ipynb,.ipynb,$(f)))"; )
 	cp ./Makefile ./notebooks/
 	cp -r ./chapters/images ./notebooks
+
+convert:
+	$(foreach f, $(QN), \
+		quarto convert $(f); \
+		mv $(subst .ipynb,.qmd, $(f)) $(subst notebooks,chapters,$(subst .ipynb,.qmd,$(f))); )
 
 preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	$(CONDA_ACTIVATE) eo-datascience

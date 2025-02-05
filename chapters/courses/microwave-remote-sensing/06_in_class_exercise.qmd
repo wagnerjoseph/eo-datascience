@@ -62,7 +62,7 @@ For the different land cover types we use the official color encoding which can 
 
 ```{python}
 # Load encoding
-with open("../../images/cmaps/06_color_mapping.json", "r") as f:
+with cat.corine_cmap.read()[0] as f:
     color_mapping_data = json.load(f)
 
 # Get mapping
