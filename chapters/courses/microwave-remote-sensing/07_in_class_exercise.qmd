@@ -18,10 +18,8 @@ Speckle is defined as a kind of noise that affects all radar images. Given the m
 
 ```{python}
 import numpy as np
-import xarray as xr
 import intake
 import json
-from pathlib import Path
 import matplotlib.pyplot as plt
 import holoviews as hv
 from holoviews.streams import RangeXY
@@ -354,4 +352,3 @@ plot_variability(fused_ds, filter_fun_temporal=temporal_filter)
 *Figure 4: Lake Neusiedl $\sigma^0_E$ with a temporal filter applied.*
 
 Let´s observe the histograms of the two plots. Especially in the region around the lake, it is clear that the distribution is now less dispersed and more centered around a central value.
-
