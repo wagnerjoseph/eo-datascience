@@ -86,14 +86,13 @@ In the next two cells we will select a subset of the data. This is done to reduc
 
 ```{python}
 subset = sig0_dc.sel(time=slice("2022-07-01", "2022-07-07"))
-subset = subset.dropna("time", how="all")
 ```
 
 Now plot the data.
 
 ```{python}
 #| jupyter: {source_hidden: true}
-aoi = subset.isel(time=0, x=slice(0, 500), y=slice(0, 500))
+aoi = subset.isel(time=4, x=slice(0, 500), y=slice(0, 500))
 aoi_lin = 10 ** (aoi / 10)
 
 fig, ax = plt.subplots(2, 3, figsize=(14, 8))
@@ -236,14 +235,14 @@ sig0_lin_monthly = sig0_lin.resample(time="1ME").mean()
 # Convert back to dB scale
 # Conversion by applying a function
 sig0_monthly = lin2db(sig0_lin_monthly)
-sig0_monthly
+sig0_monthly_sample = sig0_monthly.isel(x=slice(0, 500), y=slice(0, 500))
 ```
 
 The dataset has now only 12 timestamps, one for each month. Next, we want to calculate the average $\sigma^0$ value across the scene for one month. We will do this again by converting the data to linear scale first and then calculating the average and converting it back to dB.
 
 ```{python}
 # Lets take a data array with db values
-db_array = sig0_monthly.sel(time="2022-07-30", method="nearest")
+db_array = sig0_monthly_sample.sel(time="2022-07-30", method="nearest")
 
 # Compute the linear values
 lin_array = db2lin(db_array)
@@ -276,14 +275,14 @@ data_2_save.rio.crs
 In this case, the spatial reference is the EPSG Code `EPSG:27704`, which is the `Equi7Grid Europe`.
 As the output data array already has a spatial reference we now save it as a raster file
 
-```{python}
+```{raw}
 # Save the data
 data_2_save.rio.to_raster(
     "sig0_mean_mosaic_july.tif", tiled=True, driver="GTiff", compress="LZW"
 )
 ```
 
-```{python}
+```{raw}
 # Load the data again (for demonstration purposes)
 loaded_data = xr.open_dataset("sig0_mean_mosaic_july.tif", engine="rasterio")
 loaded_data
