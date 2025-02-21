@@ -90,3 +90,7 @@ teardown:
 		conda deactivate; \
 		conda remove --prefix $(PREFIX)/$(f) --all -y ; \
 		conda deactivate; )
+
+master:
+	python -m pip install .
+	merge_envs
