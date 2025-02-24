@@ -48,7 +48,7 @@ collection = eodc_catalog.get_collection(colllection_id)
 collection
 ```
 
-Each collection has multiple items. An item is one spatio-temporal instance the collection, for instance a satellite image. If items are needed for a specific timeframe or for a specific region of interest, we can define this as a query.
+Each collection has multiple items. An item is one spatio-temporal instance in the collection, for instance a satellite image. If items are needed for a specific timeframe or for a specific region of interest, we can define this as a query.
 
 ```{python}
 time_range = "2022-10-01/2022-10-07"  # a closed range
@@ -88,7 +88,7 @@ area_of_interest = {
 }
 ```
 
-Using our previously loaded STAC catalog, we can now search for items full-filling our query. In this example we are using the bounding box. If we want to use an area of interest specified in the geojson format - one hast to use the intersects parameter as documented in the comment below.
+Using our previously loaded STAC catalog, we can now search for items fullfilling our query. In this example we are using the bounding box. If we want to use an area of interest specified in the geojson format - one has to use the intersects parameter as documented in the comment below.
 
 ```{python}
 search = eodc_catalog.search(
