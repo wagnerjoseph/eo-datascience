@@ -1,0 +1,18 @@
+---
+title: Templates
+jupyter:
+  kernelspec:
+    name: "classification"
+    language: "python"
+    display_name: "classification"
+---
+
+This section of the Cookbook covers a wide range of topics. The intent is to
+showcase different applications of remote sensing, which are not in the context
+of a specific course.
+
+| Concepts | Importance | Notes |
+|---|---|---|
+| [Intro to xarray](https://foundations.projectpythia.org/core/xarray/xarray-intro.html) | Neccesary | |
+
+- **Time to learn**: 30 min

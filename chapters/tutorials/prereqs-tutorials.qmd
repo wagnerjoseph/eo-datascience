@@ -1,0 +1,18 @@
+---
+title: Templates
+jupyter:
+  kernelspec:
+    name: "microwave-remote-sensing"
+    language: "python"
+    display_name: "eo-datascience"
+---
+
+This section of the Cookbook covers a wide range of topics. The intent is to
+showcase different applications of remote sensing, which are not in the context
+of a specific course.
+
+| Concepts | Importance | Notes |
+|---|---|---|
+| Something| comes | here |
+
+- **Time to learn**: 30 min
