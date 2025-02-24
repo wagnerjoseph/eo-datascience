@@ -45,7 +45,7 @@ def main():
         "channels": ["conda-forge"],
         "dependencies": sorted(final_dependencies),
     }
-    yaml_file = "main-env.yml"
+    yaml_file = "environment.yml"
     with open(yaml_file, "w") as f:
         yaml.dump(
             master_env,
