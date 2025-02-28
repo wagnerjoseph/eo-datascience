@@ -1,7 +1,8 @@
-import yaml
 from pathlib import Path
+from typing import Dict, Iterable, List, Set, Tuple
+
+import yaml
 from packaging.version import parse
-from typing import List, Dict, Tuple, Set, Iterable
 
 
 def collect_yaml_files(root: Path) -> List[Path]:
@@ -20,7 +21,7 @@ def aggregate_env_dependencies(files: List[Path]) -> List[str]:
     unrefined_dependencies: List = []
     for file in files:
         environment = get_environment_from_yml(file)
-        unrefined_dependencies.append(environment.get("dependencies", []))
+        unrefined_dependencies.extend(environment.get("dependencies", []))
     return unrefined_dependencies
 
 
