@@ -74,6 +74,7 @@ preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/notebooks/how-to-cite.md -nc -P ./_preview/notebooks
 	render_sfinx_toc ./_preview
 	clean_nb ./notebooks ./_preview/notebooks
+	merge_envs --out environment.yml --name eo-datascience-dev
 	jupyter-book build ./_preview
 	jupyter-book build ./_preview
 
@@ -93,4 +94,4 @@ teardown:
 
 master:
 	python -m pip install .
-	merge_envs
+	merge_envs --out environment.yml --name eo-datascience-dev

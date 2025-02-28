@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple
 
@@ -55,9 +56,11 @@ def resolve_dependency_versions(
     return final_dependencies
 
 
-def create_master_environment(final_dependencies: List | Set) -> Dict:
+def create_master_environment(
+    final_dependencies: List | Set, name: str = "eo-datascience-dev"
+) -> Dict:
     master_env = {
-        "name": "eo-datascience",
+        "name": name,
         "channels": ["conda-forge"],
         "dependencies": sorted(final_dependencies),
     }
@@ -88,7 +91,22 @@ def fix_yml_indentation(output_file):
                 f.write(line)
 
 
-def main(output_file: str | Path = "environment.yml") -> None:
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Merge environment files")
+    parser.add_argument(
+        "--out",
+        type=str,
+        default="environment.yml",
+        help="Output file name",
+    )
+    parser.add_argument(
+        "--name",
+        type=str,
+        help="Name of the environment",
+        default="eo-datascience-dev",
+    )
+    args = parser.parse_args()
+
     root = Path("notebooks").resolve()
     files = collect_yaml_files(root)
 
@@ -104,13 +122,14 @@ def main(output_file: str | Path = "environment.yml") -> None:
     )
 
     # Create master YAML file
-    master_env = create_master_environment(final_dependencies)
-    dump_environment(output_file, master_env)
+    master_env = create_master_environment(final_dependencies, name=args.name)
+    dump_environment(args.out, master_env)
 
     # Dirty fix: Read the file and add two spaces before
-    fix_yml_indentation(output_file)
-    print("Master environment file created successfully.")
+    fix_yml_indentation(args.out)
+    print("Environments have been merged.")
+    print(f"{args.out} file created successfully.")
 
 
 if __name__ == "__main__":
-    main(output_file="environment.yml")
+    main()

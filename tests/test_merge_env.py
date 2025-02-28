@@ -13,7 +13,9 @@ def test_create_master_environment_returns_correct():
         "dependencies": ["matplotlib==3.2.2", "numpy", "pandas"],
     }
 
-    actual_result = merge_envs.create_master_environment(dependencies)
+    actual_result = merge_envs.create_master_environment(
+        dependencies, name="eo-datascience"
+    )
     assert actual_result == expected_result
 
 
