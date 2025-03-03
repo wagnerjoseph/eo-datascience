@@ -80,7 +80,8 @@ preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
 clean:
 	rm --force --recursive .ipynb_checkpoints/ **/.ipynb_checkpoints/ _book/ \
 		_freeze/ .quarto/ _preview/ ./pytest_cache ./**/**/**/.jupyter_cache \
-		./**/**/.jupyter_cache
+		./**/**/.jupyter_cache *.quarto_ipynb **/*.quarto_ipynb \
+		**/**/*.quarto_ipynb **/__pycache__ **/**/__pycache__ __pycache__
 
 teardown:
 	conda remove -n $(PREFIX)/eo-datascience --all -y

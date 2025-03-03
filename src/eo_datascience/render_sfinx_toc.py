@@ -1,6 +1,8 @@
-from pathlib import Path
-import yaml
 import argparse
+from pathlib import Path
+from typing import Literal
+
+import yaml
 from eo_datascience.clean_nb import substitute_path
 
 
@@ -35,22 +37,44 @@ def transform_appendix(toc):
     return rename_keys_section(extract_appendix(toc), "appendix")
 
 
-def rename_keys_section(sections, part="main"):
+def rename_keys_section(
+    sec,
+    part: Literal["main", "appendix"],
+):
+    sections = sec.copy()
     for i, section in enumerate(sections):
         sections[i] = _rename_keys_section(section, ("part", "caption"))
         if part == "main":
-            restruct = [
-                {
-                    "file": sections[i]["caption"][i]["file"],
-                    "sections": sections[i]["chapters"],
-                }
-            ]
-            sections[i]["chapters"] = restruct
-            sections[i]["caption"] = "Courses"
+            restructure_section_main(sections, i)
+        elif part == "appendix":
+            restructure_section_appendix(sections, i)
         else:
             sections[i]["caption"] = sections[i]["caption"][0]["file"]
 
     return sections
+
+
+def restructure_section_main(sections, i):
+    restruct = [
+        {
+            "file": sections[i]["caption"][i]["file"],
+            "sections": sections[i]["chapters"],
+        }
+    ]
+    sections[i]["chapters"] = restruct
+    sections[i]["caption"] = "Courses"
+
+
+def restructure_section_appendix(sections, i):
+    restruct = [
+        {
+            "file": sections[i]["caption"][0]["file"],
+            "sections": sections[i]["chapters"],
+        }
+    ]
+    name = sections[i]["caption"][0]["file"].split("/")[1]
+    sections[i]["chapters"] = restruct
+    sections[i]["caption"] = name.capitalize()
 
 
 def _rename_keys_section(section, key_rename):

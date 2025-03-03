@@ -1,5 +1,5 @@
 ---
-title: Templates
+title: Tutorials
 jupyter:
   kernelspec:
     name: "microwave-remote-sensing"
@@ -13,6 +13,10 @@ of a specific course.
 
 | Concepts | Importance | Notes |
 |---|---|---|
-| Something| comes | here |
+| [Intro to xarray](https://foundations.projectpythia.org/core/xarray/xarray-intro.html) | Neccesary | |
+| [Dask Arrays](https://foundations.projectpythia.org/core/xarray/dask-arrays-xarray.html)| Neccesary| |
+| [Documentation hvPlot](https://hvplot.holoviz.org/)|Helpful|Interactive ploting|
+| [Documentation odc-stac](https://odc-stac.readthedocs.io/en/latest/)|Helpful|Data access|
+| [Scientific Background](https://www.mdpi.com/2072-4292/14/15/3673)|Helpful||
 
 - **Time to learn**: 30 min
