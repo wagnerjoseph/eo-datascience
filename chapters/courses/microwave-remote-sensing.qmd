@@ -9,6 +9,17 @@ jupyter:
 
 This course at the TU Wien teaches students to read, visualize and analyze Synthetic Aperture Radar (SAR) data. This will aid interpretation of SAR data based upon a physical understanding of sensing principles and the interaction of microwaves with natural objects.
 
+| Concepts | Importance | Notes |
+|---|---|---|
+| [Intro to xarray](https://foundations.projectpythia.org/core/xarray/xarray-intro.html) | Neccesary | |
+| [Dask Arrays](https://foundations.projectpythia.org/core/xarray/dask-arrays-xarray.html)| Neccesary| |
+| [Intake](https://projectpythia.org/intake-cookbook/README.html)|Helpful| |
+| [Matplotlib](https://foundations.projectpythia.org/core/matplotlib.html)|Helpful|Ploting in Python|
+| [Documentation hvPlot](https://hvplot.holoviz.org/)|Helpful|Interactive ploting|
+| [Documentation odc-stac](https://odc-stac.readthedocs.io/en/latest/)|Helpful|Data access|
+
+- **Time to learn**: 30 min
+
 ::: {.callout-note}
 These notebooks contain interactive elements. The full interactive elements can only be viewed on Binder by clicking on the Binder badge or 🚀 button.
 :::

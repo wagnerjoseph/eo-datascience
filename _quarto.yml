@@ -54,4 +54,4 @@ execute:
   freeze: auto
   cache: true
   keep-ipynb: true
-  eval: false
+  eval: true
