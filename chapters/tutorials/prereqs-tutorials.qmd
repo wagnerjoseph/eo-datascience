@@ -1,10 +1,6 @@
 ---
 title: Tutorials
-jupyter:
-  kernelspec:
-    name: "microwave-remote-sensing"
-    language: "python"
-    display_name: "eo-datascience"
+jupyter: python3
 ---
 
 This section of the Cookbook covers a wide range of topics. The intent is to

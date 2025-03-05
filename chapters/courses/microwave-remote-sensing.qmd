@@ -1,10 +1,6 @@
 ---
 title: Microwave Remote Sensing
-jupyter:
-  kernelspec:
-    name: "microwave-remote-sensing"
-    language: "python"
-    display_name: "microwave-remote-sensing"
+jupyter: python3
 ---
 
 This course at the TU Wien teaches students to read, visualize and analyze Synthetic Aperture Radar (SAR) data. This will aid interpretation of SAR data based upon a physical understanding of sensing principles and the interaction of microwaves with natural objects.
