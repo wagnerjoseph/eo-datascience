@@ -31,10 +31,10 @@ book:
         - chapters/courses/microwave-remote-sensing/08_in_class_exercise.qmd
         - chapters/courses/microwave-remote-sensing/09_in_class_exercise.qmd
   appendices:
-    - part: "Templates"
+    - part: chapters/templates/prereqs-templates.qmd
       chapters:
         - chapters/templates/classification.qmd
-    - part: "Tutorials"
+    - part: chapters/tutorials/prereqs-tutorials.qmd
       chapters:
         - chapters/tutorials/floodmapping.qmd
     - chapters/references.qmd
@@ -54,3 +54,4 @@ execute:
   freeze: auto
   cache: true
   keep-ipynb: true
+  eval: true

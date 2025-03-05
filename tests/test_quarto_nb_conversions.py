@@ -1,25 +1,26 @@
-import nbformat
 from pathlib import Path
-import pytest
+
+import nbformat  # noqa
+import pytest  # noqa
 import yaml
-from eo_datascience.render_sfinx_toc import (
-    _render_toc,
-    transform_main,
-    transform_appendix,
-    extract_main,
-    extract_appendix,
-    rename_keys_section,
-    rename_file_path,
-)
 from eo_datascience.clean_nb import (
     clean_up_frontmatter,
+    convert_callout_notes,
     convert_refs,
+    find_ipynb,
+    quarto_note_replace,
     quarto_ref_person_replace,
     quarto_ref_time_replace,
-    convert_callout_notes,
-    quarto_note_replace,
-    find_ipynb,
     substitute_path,
+)
+from eo_datascience.render_sfinx_toc import (
+    _render_toc,
+    extract_appendix,
+    extract_main,
+    rename_file_path,
+    rename_keys_section,
+    transform_appendix,
+    transform_main,
 )
 
 
@@ -28,13 +29,15 @@ def test_toc_conversion():
     project:
       type: book
       pre-render:
-          - make kernel
-      post-render: make post-render
+        - make kernel
+      post-render:
+        - quarto convert chapters/references.qmd
+        - make post-render
 
     book:
       title: "Earth Observation Datascience"
       author: ""
-      date: "7/10/2024"
+      date: "10 January 2025"
       chapters:
         - index.qmd
         - part: chapters/courses/microwave-remote-sensing.qmd
@@ -42,10 +45,10 @@ def test_toc_conversion():
             - chapters/courses/microwave-remote-sensing/01_in_class_exercise.qmd
             - chapters/courses/microwave-remote-sensing/02_in_class_exercise.qmd
       appendices:
-        - part: "Templates"
+        - part: chapters/templates/prereqs-templates.qmd
           chapters:
             - chapters/templates/classification.qmd
-        - part: "Tutorials"
+        - part: chapters/tutorials/prereqs-tutorials.qmd
           chapters:
             - chapters/tutorials/floodmapping.qmd
         - chapters/references.qmd
@@ -66,10 +69,14 @@ def test_toc_conversion():
           - file: notebooks/courses/microwave-remote-sensing/02_in_class_exercise
     - caption: Templates
       chapters:
-        - file: notebooks/templates/classification
+      - file: notebooks/templates/prereqs-templates
+        sections:
+          - file: notebooks/templates/classification
     - caption: Tutorials
       chapters:
-        - file: notebooks/tutorials/floodmapping
+      - file: notebooks/tutorials/prereqs-tutorials
+        sections:
+          - file: notebooks/tutorials/floodmapping
     - caption: References
       chapters:
         - file: notebooks/references
@@ -104,11 +111,21 @@ def test_toc_conversion():
     assert rename_keys_section(append, "appendix") == [
         {
             "caption": "Templates",
-            "chapters": [{"file": "notebooks/templates/classification"}],
+            "chapters": [
+                {
+                    "file": "notebooks/templates/prereqs-templates",
+                    "sections": [{"file": "notebooks/templates/classification"}],
+                }
+            ],
         },
         {
             "caption": "Tutorials",
-            "chapters": [{"file": "notebooks/tutorials/floodmapping"}],
+            "chapters": [
+                {
+                    "file": "notebooks/tutorials/prereqs-tutorials",
+                    "sections": [{"file": "notebooks/tutorials/floodmapping"}],
+                }
+            ],
         },
     ]
 
