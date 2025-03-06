@@ -72,7 +72,7 @@ jobs:
           merge_envs --out environment.yml --name eo-datascience-cookbook-dev
           cp -rf ./chapters/references.bib ./pythia/notebooks/
           cp -rf --parents ./notebooks/images ./pythia
-          cp -rf --parents $(find notebooks -name "*.yml") ./pythia
+          cp -rf --parents $(find notebooks -name "*.yml") environment.yml ./pythia
           cd ./pythia
           find . -name '*.ipynb' -exec nbstripout {} +
           find . -name '*.ipynb' -exec nbqa black {} +
