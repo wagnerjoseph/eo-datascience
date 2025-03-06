@@ -69,6 +69,7 @@ jobs:
           python -m pip install nbstripout black isort nbqa
           render_sfinx_toc ./pythia
           clean_nb ./notebooks  ./pythia/notebooks
+          merge_envs --out environment.yml --name eo-datascience-cookbook-dev
           cp -rf ./chapters/references.bib ./pythia/notebooks/
           cp -rf --parents ./notebooks/images ./pythia
           cp -rf --parents $(find notebooks -name "*.yml") ./pythia
