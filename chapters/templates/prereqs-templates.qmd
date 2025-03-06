@@ -4,15 +4,15 @@ jupyter: python3
 ---
 
 This section of the Cookbook covers a wide range of topics. The intent is to
-showcase different applications of remote sensing, which are not in the context
-of a specific course.
+create templates to showcase workflows that can be used by students as a primer
+for independent research projects.
 
 | Concepts | Importance | Notes |
 |---|---|---|
-| [Intro to xarray](https://foundations.projectpythia.org/core/xarray/xarray-intro.html) | Neccesary | |
-| [Dask Arrays](https://foundations.projectpythia.org/core/xarray/dask-arrays-xarray.html)| Neccesary| |
+| [Intro to xarray](https://foundations.projectpythia.org/core/xarray/xarray-intro.html) | Necessary | |
+| [Dask Arrays](https://foundations.projectpythia.org/core/xarray/dask-arrays-xarray.html)| Necessary| |
 | [Documentation scikit-learn](https://scikit-learn.org/stable/)|Neccesary|Machine Learning in Python|
 | [Documentation Matplotlib](https://matplotlib.org/stable/users/explain/quick_start.html)|Helpful|Ploting in Python|
 | [Documentation odc-stac](https://odc-stac.readthedocs.io/en/latest/)|Helpful|Data access|
 
-- **Time to learn**: 30 min
+- **Time to learn**: 10 min
