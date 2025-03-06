@@ -53,7 +53,7 @@ cor_da = cat.corine.read().land_cover.compute()
 
 ### Colormapping and Encoding
 
-For the different land cover types we use the official color encoding which can be found in [CORINE Land Cover](https://collections.sentinel-hub.com/corine-land-cover/readme.html).
+For the different land cover types we use the official color encoding.
 
 ```{python}
 # Load encoding
