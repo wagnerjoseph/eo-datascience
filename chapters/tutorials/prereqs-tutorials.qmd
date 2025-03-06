@@ -3,16 +3,15 @@ title: Tutorials
 jupyter: python3
 ---
 
-This section of the Cookbook covers a wide range of topics. The intent is to
-showcase different applications of remote sensing, which are not in the context
-of a specific course.
+This section of the Cookbook covers a wide range of topics. They showcase the
+creation and usage of data products developed by TU Wien and EODC.
+
 
 | Concepts | Importance | Notes |
 |---|---|---|
-| [Intro to xarray](https://foundations.projectpythia.org/core/xarray/xarray-intro.html) | Neccesary | |
-| [Dask Arrays](https://foundations.projectpythia.org/core/xarray/dask-arrays-xarray.html)| Neccesary| |
-| [Documentation hvPlot](https://hvplot.holoviz.org/)|Helpful|Interactive ploting|
+| [Intro to xarray](https://foundations.projectpythia.org/core/xarray/xarray-intro.html) | Necessary | |
+| [Dask Arrays](https://foundations.projectpythia.org/core/xarray/dask-arrays-xarray.html)| Necessary| |
+| [Documentation hvPlot](https://hvplot.holoviz.org/)|Helpful|Interactive plotting|
 | [Documentation odc-stac](https://odc-stac.readthedocs.io/en/latest/)|Helpful|Data access|
-| [Scientific Background](https://www.mdpi.com/2072-4292/14/15/3673)|Helpful||
 
-- **Time to learn**: 30 min
+- **Time to learn**: 10 min
