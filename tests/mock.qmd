@@ -2,7 +2,11 @@
 title: This a mock Jupyter file
 subtitle: We use it for testing
 author: anonymous
-jupyter: python3
+jupyter:
+  kernelspec:
+    name: "eo-datascience"
+    language: "python"
+    display_name: "eo-datascience"
 ---
 
 ::: {.callout-note}
@@ -10,4 +14,3 @@ This a callout note.
 :::
 
 lorem ipsum [@anon2024] and [@anon2025] and lorem ipsum @anon2024 and @anon2025
-

@@ -13,7 +13,7 @@ CONDA_ACTIVATE := source $(CONDA_ENV)/etc/profile.d/conda.sh ; \
 	conda activate ; conda activate
 PREFIX = $(CURDIR)/.conda_envs
 CONDA_ENV_DIR := $(foreach i,$(REQ),$(PREFIX)/$(i))
-KERNEL_DIR != $(CONDA_ACTIVATE) eo-datascience; jupyter --data-dir
+KERNEL_DIR != jupyter --data-dir
 KERNEL_DIR := $(foreach i,$(REQ),$(KERNEL_DIR)/kernels/$(i))
 
 help:
@@ -31,10 +31,6 @@ help:
 		temporary files"
 	@echo "  make help         - Display this help message"
 
-$(CONDA_ENV)/envs/eo-datascience:
-	- conda update -n base -c conda-forge conda -y
-	conda env create --file environment.yml
-
 $(CONDA_ENV_DIR):
 	$(foreach f, $(YML), \
 		conda env create --file $(f) \
@@ -49,7 +45,7 @@ $(KERNEL_DIR):
 		python -m ipykernel install --user --name $(f) --display-name $(f); \
 			conda deactivate; )
 
-kernel: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
+kernel: $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	@echo -e "jupyter kernels are ready."
 
 post-render:
@@ -63,8 +59,7 @@ convert:
 		quarto convert $(f); \
 		mv $(subst .ipynb,.qmd, $(f)) $(subst notebooks,chapters,$(subst .ipynb,.qmd,$(f))); )
 
-preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
-	$(CONDA_ACTIVATE) $(PREFIX)/eo-datascience
+preview: $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	- mkdir -p _preview/notebooks
 	python -m pip install .
 	cp ./chapters/references.bib ./_preview/notebooks/
@@ -73,8 +68,11 @@ preview: $(CONDA_ENV)/envs/eo-datascience $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/_config.yml -nc -P ./_preview
 	wget https://raw.githubusercontent.com/TUW-GEO/eo-datascience-cookbook/refs/heads/main/notebooks/how-to-cite.md -nc -P ./_preview/notebooks
 	render_sfinx_toc ./_preview
+	merge_envs --out ./_preview/environment.yml --name eo-datascience-dev
+	conda env create --file _preview/environment.yml --prefix $(PREFIX)/eo-datascience-cookbook-dev
+	$(CONDA_ACTIVATE) $(PREFIX)/eo-datascience-cookbook-dev
+	python -m ipykernel install --user --name eo-datascience-cookbook-dev --display-name eo-datascience-cookbook-dev
 	clean_nb ./notebooks ./_preview/notebooks
-	merge_envs --out environment.yml --name eo-datascience-dev
 	jupyter-book build ./_preview
 	jupyter-book build ./_preview
 
@@ -85,7 +83,6 @@ clean:
 		**/**/*.quarto_ipynb **/__pycache__ **/**/__pycache__ __pycache__
 
 teardown:
-	conda remove -n $(PREFIX)/eo-datascience --all -y
 	$(foreach f, $(REQ), \
 		$(CONDA_ACTIVATE) $(PREFIX)/$(f); \
 		jupyter kernelspec uninstall -y $(f); \
@@ -95,4 +92,4 @@ teardown:
 
 master:
 	python -m pip install .
-	merge_envs --out environment.yml --name eo-datascience-dev
+	merge_envs --out environment.yml --name eo-datascience-cookbook-dev

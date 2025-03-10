@@ -57,7 +57,7 @@ def resolve_dependency_versions(
 
 
 def create_master_environment(
-    final_dependencies: List | Set, name: str = "eo-datascience-dev"
+    final_dependencies: List | Set, name: str = "eo-datascience-cookbook-dev"
 ) -> Dict:
     master_env = {
         "name": name,
@@ -103,7 +103,7 @@ def main() -> None:
         "--name",
         type=str,
         help="Name of the environment",
-        default="eo-datascience-dev",
+        default="eo-datascience-cookbook-dev",
     )
     args = parser.parse_args()
 
