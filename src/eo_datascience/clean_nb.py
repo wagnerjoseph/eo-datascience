@@ -13,12 +13,12 @@ def set_kernel_all_notebooks(
         nb = nbformat.read(nb_path, as_version=4)
         nb.metadata.kernelspec.name = name
         nb.metadata.kernelspec.display_name = name
-    # Save notebook
-    nb_path = substitute_path(nb_path, dir, out)
-    if save:
-        nbformat.write(nb, nb_path)
-    else:
-        return nb
+        # Save notebook
+        nb_path = substitute_path(nb_path, dir, out)
+        if save:
+            nbformat.write(nb, nb_path)
+        else:
+            return nb
 
 
 def clean_up_frontmatter(dir="./notebooks", out=None, save=True):
