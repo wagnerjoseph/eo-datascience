@@ -1,7 +1,24 @@
-import nbformat
-from pathlib import Path
-import re
 import argparse
+import re
+from pathlib import Path
+
+import nbformat
+
+
+def set_kernel_all_notebooks(
+    dir="./notebooks", out=None, save=True, name="eo-datascience-cookbook-dev"
+):
+    nb_paths = find_ipynb(dir)
+    for nb_path in nb_paths:
+        nb = nbformat.read(nb_path, as_version=4)
+        nb.metadata.kernelspec.name = name
+        nb.metadata.kernelspec.display_name = name
+    # Save notebook
+    nb_path = substitute_path(nb_path, dir, out)
+    if save:
+        nbformat.write(nb, nb_path)
+    else:
+        return nb
 
 
 def clean_up_frontmatter(dir="./notebooks", out=None, save=True):
@@ -29,7 +46,7 @@ def clean_up_frontmatter(dir="./notebooks", out=None, save=True):
                 i += 1
                 line = fm[i]
 
-            new_text += fm[i + 1 :]
+            new_text += fm[i + 1 :]  # noqa
             nb.cells[0].source = "\n".join(new_text) + "\n"
             nb.cells[0].cell_type = "markdown"
         # Save notebook
@@ -44,8 +61,9 @@ def convert_bibliography(nb_path="./notebooks/references.ipynb", out=None, save=
     nb_path = Path(nb_path)
     if nb_path.exists():
         nb = nbformat.read(nb_path, as_version=4)
-        nb.cells[0].source = \
-"""# References
+        nb.cells[
+            0
+        ].source = """# References
 ```{bibliography}
 :style: plain
 ```
@@ -150,6 +168,7 @@ def main():
     args = parser.parse_args()
 
     clean_up_frontmatter(args.dir, args.out)
+    set_kernel_all_notebooks(args.out)
     convert_callout_notes(args.out)
     convert_refs(args.out)
     convert_bibliography(out=args.out)

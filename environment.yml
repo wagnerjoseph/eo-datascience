@@ -2,48 +2,14 @@ name: eo-datascience
 channels:
   - conda-forge
 dependencies:
-  - aiohttp
-  - bokeh
-  - cartopy
-  - cmcrameri
-  - dask
-  - datashader
-  - folium
-  - geopandas
-  - geoviews
-  - graphviz
-  - holoviews
-  - huggingface_hub
-  - hvplot
-  - intake
-  - intake-xarray
-  - jupyter
-  - jupyter-book
-  - jupyter-cache
-  - jupyter_bokeh
-  - mamba
-  - matplotlib
-  - nbformat
-  - nbstripout
-  - nodejs
-  - numpy
-  - odc-stac
-  - openssl
-  - pip
-  - pre-commit
-  - pyproj
-  - pystac-client
-  - pytest
   - python=3.12
-  - rasterio
-  - requests
-  - rioxarray
-  - scikit-image
-  - scikit-learn
-  - scipy
-  - seaborn
-  - snaphu
+  - pip
+  - mamba
+  - jupyter
+  - jupyter-cache
+  - nbformat
+  - pre-commit
+  - nbstripout
+  - pytest
+  - jupyter-book
   - sphinx-pythia-theme
-  - stackstac
-  - xarray
-  - zarr=2.18.4

@@ -11,6 +11,7 @@ from eo_datascience.clean_nb import (
     quarto_note_replace,
     quarto_ref_person_replace,
     quarto_ref_time_replace,
+    set_kernel_all_notebooks,
     substitute_path,
 )
 from eo_datascience.render_sfinx_toc import (
@@ -95,10 +96,12 @@ def test_toc_conversion():
                     "file": "notebooks/courses/microwave-remote-sensing",
                     "sections": [
                         {
-                            "file": "notebooks/courses/microwave-remote-sensing/01_in_class_exercise"
+                            "file": "notebooks/courses/microwave-remote-"
+                            + "sensing/01_in_class_exercise"
                         },
                         {
-                            "file": "notebooks/courses/microwave-remote-sensing/02_in_class_exercise"
+                            "file": "notebooks/courses/microwave-remote-"
+                            + "sensing/02_in_class_exercise"
                         },
                     ],
                 },
@@ -145,7 +148,8 @@ def test_remove_front_matter():
     )
     assert (
         clean_up_frontmatter("./tests", None, False)["cells"][0]["source"]
-        == "# This a mock Jupyter file\n**We use it for testing**\n\nSome other text, which should not be deleted!\n"
+        == "# This a mock Jupyter file\n**We use it for testing**\n\nSome"
+        + " other text, which should not be deleted!\n"
     )
 
 
@@ -174,7 +178,8 @@ def test_conversion_of_refs():
     ]
     assert (
         convert_refs("./tests", None, False)["cells"][2]["source"]
-        == r"lorem ipsum {cite:p}`anon2024` and {cite:p}`anon2025` and lorem ipsum {cite:t}`anon2024` and {cite:t}`anon2025`"
+        == r"lorem ipsum {cite:p}`anon2024` and {cite:p}`anon2025` and lorem"
+        + " ipsum {cite:t}`anon2024` and {cite:t}`anon2025`"
     )
 
 
@@ -182,3 +187,12 @@ def test_conversion_of_callout_notes():
     rst = ":::{note}\nThis a callout note.\n:::"
     assert quarto_note_replace(r"::: {.callout-note}\nThis a callout note.\n:::") == rst
     assert convert_callout_notes("./tests", None, False)["cells"][1]["source"] == rst
+
+
+def test_setting_kernelspec():
+    meta_mock_nb = nbformat.read("tests/mock.ipynb", as_version=4).metadata
+    kernel_display_name_mock_nb = meta_mock_nb.kernelspec.display_name
+    kernel_name_mock_nb = meta_mock_nb.kernelspec.name
+    new_meta_mock_nb = set_kernel_all_notebooks(dir="tests", save=False).metadata
+    assert kernel_display_name_mock_nb != new_meta_mock_nb.kernelspec.display_name
+    assert kernel_name_mock_nb != new_meta_mock_nb.kernelspec.name
