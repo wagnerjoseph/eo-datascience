@@ -71,7 +71,7 @@ preview: $(CONDA_ENV_DIR) $(KERNEL_DIR)
 	merge_envs --out ./_preview/environment.yml --name eo-datascience-dev
 	conda env create --file _preview/environment.yml --prefix $(PREFIX)/eo-datascience-cookbook-dev
 	$(CONDA_ACTIVATE) $(PREFIX)/eo-datascience-cookbook-dev
-	python -m ipykernel install --user --name eo-datascience-cookbook-dev --display-name eo-datascience-cookbook-dev
+# python -m ipykernel install --user
 	clean_nb ./notebooks ./_preview/notebooks
 	jupyter-book build ./_preview
 	jupyter-book build ./_preview
