@@ -261,29 +261,3 @@ print(f"Average backscatter value in dB: {db_mean.values: .3f}")
 ```
 
 As you can see in the example, the mean values across the scene are different in dB and linear scale. Therefore, it is important to be aware in which scale the data is stored to perform the correct type of mathematical operation or always convert the data to linear scale before doing any calculations.
-
-## Save Mean Mosaic as Tif File
-
-Often we want to store the output of a computation permanently on a file system. The most common file format for this is a GeoTIFF (TIF file with additional information on the georeference). The following cell indicates how this can be easily done with Xarray. When we want to store the data as a GeoTIFF we need to make sure to provide a spatial reference to geolocate the data. The best way to check whether the Xarray has a coordinate reference system (CRS) is by using the rioxarray `rio.crs` accessor. More about this in notebook "Datacubes".
-
-```{python}
-# Select some data which we want to save
-data_2_save = sig0_monthly.sel(time="2022-07-30", method="nearest")
-data_2_save.rio.crs
-```
-
-In this case, the spatial reference is the EPSG Code `EPSG:27704`, which is the `Equi7Grid Europe`.
-As the output data array already has a spatial reference we now save it as a raster file
-
-```{raw}
-# Save the data
-data_2_save.rio.to_raster(
-    "sig0_mean_mosaic_july.tif", tiled=True, driver="GTiff", compress="LZW"
-)
-```
-
-```{raw}
-# Load the data again (for demonstration purposes)
-loaded_data = xr.open_dataset("sig0_mean_mosaic_july.tif", engine="rasterio")
-loaded_data
-```
