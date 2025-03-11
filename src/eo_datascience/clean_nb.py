@@ -6,13 +6,17 @@ import nbformat
 
 
 def set_kernel_all_notebooks(
-    dir="./notebooks", out=None, save=True, name="eo-datascience-cookbook-dev"
+    dir="./notebooks",
+    out=None,
+    save=True,
+    name="python3",
+    display_name="Python 3 (ipykernel)",
 ):
     nb_paths = find_ipynb(dir)
     for nb_path in nb_paths:
         nb = nbformat.read(nb_path, as_version=4)
         nb.metadata.kernelspec.name = name
-        nb.metadata.kernelspec.display_name = name
+        nb.metadata.kernelspec.display_name = display_name
         # Save notebook
         nb_path = substitute_path(nb_path, dir, out)
         if save:
