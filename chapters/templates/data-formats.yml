@@ -1,0 +1,11 @@
+name: data-formats
+channels:
+  - conda-forge
+dependencies:
+  - dask 
+  - odc-stac
+  - pystac-client
+  - python=3.11
+  - rioxarray
+  - xarray
+  - zarr=2.18.4
