@@ -3,3 +3,12 @@ title: Templates
 jupyter: python3
 ---
 
+```{python}
+from datetime import datetime, timedelta
+
+import xarray as xr
+import pystac_client
+import odc.stac
+import rioxarray
+```
+
