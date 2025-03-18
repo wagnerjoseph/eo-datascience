@@ -1,7 +1,13 @@
 ---
-title: Templates
+title: Data-Formats
 jupyter: python3
 ---
+
+
+
+In this chapter we will have a closer look at different Raster Data Formats generally used with Xarray. We will focus on GeoTIFF, NetCDF, HDF5 and Zarr file formats as these are widely used in remote sensing tasks.
+There exist many other formats for various applications. For example, GRIB is widely used in meteorology for weather and climate modeling, while Shapefiles and GeoJSON are commonly used for vector-based geospatial data. 
+To begin, we need to import the following modules.
 
 ```{python}
 from datetime import datetime, timedelta
@@ -10,5 +16,55 @@ import xarray as xr
 import pystac_client
 import odc.stac
 import rioxarray
+import numpy as np
+import pandas as pd
+import os
 ```
 
+The standard data types we have a look at can be read by using ``` xr.open_dataset```. It is recommended to define the engine used for reading the data.
+
+```python
+xr.open_dataset("example.nc", engine="netcdf4")
+```
+
+
+## NetCDF (.nc)
+The recommended way to store a xarray data is to use NetCDF. 
+
+?The additional library ```import netCDF4``` is used?
+
+```{python}
+ds = xr.Dataset(
+    {"foo": (("x", "y"), np.random.rand(4, 5))},
+    coords={
+        "x": [10, 20, 30, 40],
+        "y": pd.date_range("2000-01-01", periods=5),
+        "z": ("x", list("abcd")),
+    },
+)
+
+ds.to_netcdf("saved_on_disk.nc")
+```
+
+```{python}
+
+ds_disk = xr.open_dataset("saved_on_disk.nc")
+
+ds_disk
+```
+
+
+## HDF-5 (.hdf, .h5)
+
+## Zarr (.zarr)
+
+## GeoTIFF (.tif, .tiff)
+
+
+
+## Accessing chunked data
+### Kerchunk
+
+
+For a more extensive guide have a look at the reference:
+https://docs.xarray.dev/en/stable/user-guide/io.html#hdf5
