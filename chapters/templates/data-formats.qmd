@@ -4,6 +4,11 @@ jupyter: python3
 ---
 
 
+#----------------------------------------------------------------
+This is a unfinished draft. Feel free to continue.
+Main source: https://docs.xarray.dev/en/stable/user-guide/io.html
+#----------------------------------------------------------------
+
 
 In this chapter we will have a closer look at different Raster Data Formats generally used with Xarray. We will focus on GeoTIFF, NetCDF, HDF5 and Zarr file formats as these are widely used in remote sensing tasks.
 There exist many other formats for various applications. For example, GRIB is widely used in meteorology for weather and climate modeling, while Shapefiles and GeoJSON are commonly used for vector-based geospatial data. 
@@ -19,19 +24,10 @@ import rioxarray
 import numpy as np
 import pandas as pd
 import os
+import zarr
 ```
 
-The standard data types we have a look at can be read by using ``` xr.open_dataset```. It is recommended to define the engine used for reading the data.
-
-```python
-xr.open_dataset("example.nc", engine="netcdf4")
-```
-
-
-## NetCDF (.nc)
-The recommended way to store a xarray data is to use NetCDF. 
-
-?The additional library ```import netCDF4``` is used?
+We define a Xarray Dataset which we will write and read in later.
 
 ```{python}
 ds = xr.Dataset(
@@ -42,28 +38,66 @@ ds = xr.Dataset(
         "z": ("x", list("abcd")),
     },
 )
+```
 
+## General form
+The standard data types we have a look at can be read by using ``` xr.open_dataset```. It is recommended to define the engine used for reading the data.
+
+```python
+xr.open_dataset("example.nc", engine="netcdf4")
+```
+
+When saving the data structures like a Dataset we use ```ds.to_<data_format>()``` for the most common data formats.
+
+```python
+ds.to_netcdf("saved_on_disk.nc")
+```
+
+## NetCDF (.nc)
+The recommended way to store Xarray data structures is NetCDF. For reading and writing netCDF files one of the following library is necessary: Scipy, h5netcdf or netCDF4-Python. By default netCDF4 is used (assuming netCDF4-Python is installed). This can be changed by using ```format``` and ```engine```.
+
+```{python}
 ds.to_netcdf("saved_on_disk.nc")
 ```
 
 ```{python}
-
 ds_disk = xr.open_dataset("saved_on_disk.nc")
 
 ds_disk
 ```
 
+Similarly ```DataArray.to_netcdf()``` and ```open_dataarray()``` can be used for DataArrays. Data from netCDF files is always lazy loaded. The data can be manipulated, sliced or filtered and the values are not loaded into memory until actual computation is performed. As lazy loading is not always desirable, ```Dataset.load()``` can be used to load the entire values.
 
-## HDF-5 (.hdf, .h5)
+### Why using NetCDF?
+TODO
+
 
 ## Zarr (.zarr)
+Zarr is a Python package that provides an implementation of chunked, compressed, multidimensional arrays. Zarr has the ability to store arrays in a range of ways, including in memory, in files, and in cloud-based object storage. This allows the storage and analyis of datasets which are far to big to fit on disk.
+When saving data in the Zarr format we need to provide a path to a folder as the data is stored in multiple files. If this directory does not exist it will be created and the ending ```.zarr``` is optional and just a reminder. When using ```mode="w"``` files present in the folder will be overwritten.
+
+```{python}
+ds.to_zarr("path/to/directory.zarr")
+```
+
+```{python}
+ds_zarr = xr.open_dataset("path/to/directory.zarr", engine="zarr")
+
+ds_zarr
+```
+
+Similarly ```DataArray.to_netcdf()``` and ```open_dataarray()``` can be used for DataArrays.
+
+### Why using Zarr?
+TODO
+
 
 ## GeoTIFF (.tif, .tiff)
+TODO
 
+## ?HDF-5 (.hdf, .h5)?
 
-
-## Accessing chunked data
-### Kerchunk
+## ?Kerchunk?
 
 
 For a more extensive guide have a look at the reference:
